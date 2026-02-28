@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 // ============================================================================
 // TERROIR DIRECT - Marketplace Agricole Local
@@ -620,8 +620,8 @@ const Header = ({ currentView, setCurrentView, userRole, cartCount, setShowCart 
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${currentView === item.id
-                    ? 'bg-[#2D5016]/10 text-[#2D5016]'
-                    : 'text-stone-600 hover:bg-stone-100'
+                  ? 'bg-[#2D5016]/10 text-[#2D5016]'
+                  : 'text-stone-600 hover:bg-stone-100'
                   }`}
               >
                 {item.icon}
@@ -680,8 +680,8 @@ const Header = ({ currentView, setCurrentView, userRole, cartCount, setShowCart 
                 key={item.id}
                 onClick={() => { setCurrentView(item.id); setMobileMenuOpen(false); }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${currentView === item.id
-                    ? 'bg-[#2D5016]/10 text-[#2D5016]'
-                    : 'text-stone-600 hover:bg-stone-100'
+                  ? 'bg-[#2D5016]/10 text-[#2D5016]'
+                  : 'text-stone-600 hover:bg-stone-100'
                   }`}
               >
                 {item.icon}
@@ -1523,8 +1523,8 @@ const ProducerDashboard = ({ setCurrentView }) => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${activeTab === tab.id
-                  ? 'bg-[#2D5016] text-white'
-                  : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+                ? 'bg-[#2D5016] text-white'
+                : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
                 }`}
             >
               {tab.icon}
@@ -1749,8 +1749,8 @@ const BuyerDashboard = ({ setCurrentView }) => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all ${activeTab === tab.id
-                  ? 'bg-[#2D5016] text-white'
-                  : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+                ? 'bg-[#2D5016] text-white'
+                : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
                 }`}
             >
               {tab.icon}
