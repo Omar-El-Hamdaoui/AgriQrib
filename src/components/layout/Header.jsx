@@ -29,7 +29,7 @@ export const Header = ({ currentView, setCurrentView, userRole, cartCount, setSh
                 className="text-xl font-bold text-[#2D5016] tracking-tight"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
-                TerroirDirect
+                AgrisQrib
               </h1>
               <p className="text-[10px] text-stone-500 -mt-1 tracking-wider uppercase">
                 Du producteur à vous
