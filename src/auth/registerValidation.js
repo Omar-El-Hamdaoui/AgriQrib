@@ -5,10 +5,9 @@
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const isEmpty   = (v) => !v || v.trim() === '';
-const minLen    = (v, n) => v && v.trim().length >= n;
 const maxLen    = (v, n) => !v || v.trim().length <= n;
 const isEmail   = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-const isPhone   = (v) => !v || /^[\d\s\+\-\(\)]{7,20}$/.test(v);
+const isPhone   = (v) => !v || /^[\d\s+\-()]{7,20}$/.test(v);
 const isPostal  = (v) => /^\d{5}$/.test(v);
 const isStrongPwd = (v) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);

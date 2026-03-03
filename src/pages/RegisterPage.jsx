@@ -381,11 +381,11 @@ const StepConfirm = ({ data, errors, setField }) => {
           </div>
           <span className="text-sm text-stone-700">
             J'accepte les{' '}
-            <a href="#" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
+            <a href="https://www.index-education.com/contenu/telechargement/doc/Modele_CGU_CLIENT.pdf" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
               Conditions Générales d'Utilisation
             </a>{' '}
             et la{' '}
-            <a href="#" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
+            <a href="https://www.fondationdentreprisehermes.org/sites/default/files/pdf/fondation-confidentialite.pdf" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
               Politique de confidentialité
             </a>. *
           </span>
@@ -455,7 +455,6 @@ export const RegisterPage = ({ setCurrentView }) => {
     next, prev, submit,
   } = useRegister();
 
-  const stepTitles = ['Type de compte', 'Identité', 'Sécurité', 'Votre ferme', 'Confirmation'];
 
   const stepComponents = {
     [STEPS.ROLE]:     <StepRole     data={data} errors={errors} setField={setField} />,
