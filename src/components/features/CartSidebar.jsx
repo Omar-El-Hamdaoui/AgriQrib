@@ -78,7 +78,7 @@ export const CartSidebar = ({ isOpen, onClose, items, setItems }) => {
                       </button>
                     </div>
                     <p className="font-bold text-[#2D5016]">
-                      {(item.price * item.quantity).toFixed(2)}€
+                      {(item.price * item.quantity).toFixed(2)}DH
                     </p>
                   </div>
                 </div>
@@ -99,7 +99,7 @@ export const CartSidebar = ({ isOpen, onClose, items, setItems }) => {
             <div className="space-y-2">
               <div className="flex justify-between text-stone-600">
                 <span>Sous-total</span>
-                <span>{subtotal.toFixed(2)}€</span>
+                <span>{subtotal.toFixed(2)}DH</span>
               </div>
               <div className="flex justify-between text-stone-600">
                 <span>Livraison</span>
@@ -107,7 +107,7 @@ export const CartSidebar = ({ isOpen, onClose, items, setItems }) => {
               </div>
               <div className="flex justify-between text-xl font-bold text-stone-900 pt-2 border-t">
                 <span>Total</span>
-                <span>{subtotal.toFixed(2)}€</span>
+                <span>{subtotal.toFixed(2)}DH</span>
               </div>
             </div>
             <Button className="w-full" size="lg">

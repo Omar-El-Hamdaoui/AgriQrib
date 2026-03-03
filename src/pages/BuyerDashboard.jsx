@@ -21,7 +21,7 @@ export const BuyerDashboard = ({ setCurrentView }) => {
             <h1 className="text-3xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
               Mon compte
             </h1>
-            <p className="text-stone-600">Jean Dupont · Particulier</p>
+            <p className="text-stone-600">Mohamed Benjelloun · Particulier</p>
           </div>
         </div>
 
@@ -50,10 +50,10 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                   <Badge variant="success">Confirmée</Badge>
                   <h3 className="font-semibold text-stone-900 mt-2">Commande #12345</h3>
                   <p className="text-sm text-stone-500">
-                    Ferme du Soleil Levant · Retrait le 02/03/2026
+                    Ferme Agroécologique La Finca · Retrait le 02/03/2026
                   </p>
                 </div>
-                <p className="text-2xl font-bold text-[#2D5016]">19.90€</p>
+                <p className="text-2xl font-bold text-[#2D5016]">19.90DH</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">Voir détails</Button>
@@ -75,8 +75,8 @@ export const BuyerDashboard = ({ setCurrentView }) => {
 
               <div className="mt-4 p-4 bg-sky-50 rounded-xl border border-sky-200">
                 <p className="text-sm text-sky-800 mb-2">Le producteur propose :</p>
-                <p className="text-2xl font-bold text-sky-900">8.00€/kg au lieu de 8.90€</p>
-                <p className="text-sm text-sky-600">Votre offre : 7.50€/kg</p>
+                <p className="text-2xl font-bold text-sky-900">8.00DH/kg au lieu de 8.90DH</p>
+                <p className="text-sm text-sky-600">Votre offre : 7.50DH/kg</p>
                 <div className="flex gap-2 mt-4">
                   <Button size="sm" variant="success">Accepter</Button>
                   <Button size="sm" variant="outline">Décliner</Button>

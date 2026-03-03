@@ -48,7 +48,7 @@ export const OfferModal = ({ product, onClose, onSubmit }) => {
               <h3 className="font-semibold text-stone-900">{product.name}</h3>
               <p className="text-sm text-stone-500">{product.farmName}</p>
               <p className="text-lg font-bold text-[#2D5016] mt-1">
-                {product.pricePerUnit.toFixed(2)}€/{product.unit}
+                {product.pricePerUnit.toFixed(2)}DH/{product.unit}
               </p>
             </div>
           </div>
@@ -86,10 +86,10 @@ export const OfferModal = ({ product, onClose, onSubmit }) => {
                 onChange={(e) => setPricePerUnit(Number(e.target.value))}
                 className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-xl text-xl font-bold text-center focus:border-[#2D5016] focus:ring-2 focus:ring-[#2D5016]/20"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-500">€</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-500">DH</span>
             </div>
             <p className="text-sm text-stone-500 mt-1 text-center">
-              Prix catalogue : {product.pricePerUnit.toFixed(2)}€
+              Prix catalogue : {product.pricePerUnit.toFixed(2)}DH
               <span className="text-emerald-600 font-medium ml-2">(-{discountPercent}%)</span>
             </p>
           </div>
@@ -98,15 +98,15 @@ export const OfferModal = ({ product, onClose, onSubmit }) => {
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-stone-600">Prix catalogue total</span>
-              <span className="text-stone-600 line-through">{originalTotal.toFixed(2)}€</span>
+              <span className="text-stone-600 line-through">{originalTotal.toFixed(2)}DH</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium text-stone-900">Votre offre</span>
-              <span className="text-2xl font-bold text-[#2D5016]">{proposedTotal.toFixed(2)}€</span>
+              <span className="text-2xl font-bold text-[#2D5016]">{proposedTotal.toFixed(2)}DH</span>
             </div>
             <div className="flex justify-between text-sm text-emerald-600">
               <span>Économie potentielle</span>
-              <span className="font-medium">{savings.toFixed(2)}€</span>
+              <span className="font-medium">{savings.toFixed(2)}DH</span>
             </div>
           </div>
 

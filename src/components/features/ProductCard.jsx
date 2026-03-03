@@ -59,7 +59,7 @@ export const ProductCard = ({ product, onAddToCart, onMakeOffer }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold text-[#2D5016]">
-                {product.pricePerUnit.toFixed(2)}€
+                {product.pricePerUnit.toFixed(2)}DH
                 <span className="text-sm font-normal text-stone-500">/{product.unit}</span>
               </p>
               <p className="text-xs text-stone-500">

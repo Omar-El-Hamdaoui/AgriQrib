@@ -8,7 +8,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
   const stats = [
-    { label: 'Ventes du mois',       value: '2 450€', change: '+12%',       positive: true },
+    { label: 'Ventes du mois',       value: '2 450DH', change: '+12%',       positive: true },
     { label: 'Commandes en cours',   value: '8',      change: '+3',         positive: true },
     { label: 'Offres en attente',    value: '3',      change: '2 nouvelles',positive: false },
     { label: 'Note moyenne',         value: '4.8',    change: '',           positive: true },
@@ -31,7 +31,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
             <h1 className="text-3xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
               Tableau de bord
             </h1>
-            <p className="text-stone-600">Ferme du Soleil Levant</p>
+            <p className="text-stone-600">Ferme Agroécologique La Finca</p>
           </div>
           <Button>
             <Icons.Plus /> Ajouter un produit
@@ -103,16 +103,16 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                         </div>
                         <div>
                           <p className="text-stone-500">Prix proposé</p>
-                          <p className="font-semibold text-[#2D5016]">{offer.proposedPricePerUnit.toFixed(2)}€/kg</p>
+                          <p className="font-semibold text-[#2D5016]">{offer.proposedPricePerUnit.toFixed(2)}DH/kg</p>
                         </div>
                         <div>
                           <p className="text-stone-500">Total</p>
-                          <p className="font-semibold">{offer.totalProposed.toFixed(2)}€</p>
+                          <p className="font-semibold">{offer.totalProposed.toFixed(2)}DH</p>
                         </div>
                       </div>
                       <p className="text-sm text-stone-500 mt-2 line-through">
-                        Prix catalogue : {offer.originalPricePerUnit.toFixed(2)}€/kg
-                        (Total : {(offer.originalPricePerUnit * offer.proposedQuantity).toFixed(2)}€)
+                        Prix catalogue : {offer.originalPricePerUnit.toFixed(2)}DH/kg
+                        (Total : {(offer.originalPricePerUnit * offer.proposedQuantity).toFixed(2)}DH)
                       </p>
                     </div>
 
@@ -132,7 +132,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                   {offer.status === 'counter_offer' && (
                     <div className="p-4 bg-sky-50 rounded-xl border border-sky-200">
                       <p className="text-sm font-medium text-sky-800 mb-1">Votre contre-offre :</p>
-                      <p className="text-2xl font-bold text-sky-900">{offer.counterPrice.toFixed(2)}€/kg</p>
+                      <p className="text-2xl font-bold text-sky-900">{offer.counterPrice.toFixed(2)}DH/kg</p>
                       <p className="text-sm text-sky-600">En attente de réponse</p>
                     </div>
                   )}
@@ -169,13 +169,13 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <span>{item.quantity} {item.unit} × {item.name}</span>
-                      <span className="font-medium">{(item.quantity * item.price).toFixed(2)}€</span>
+                      <span className="font-medium">{(item.quantity * item.price).toFixed(2)}DH</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-stone-200">
-                  <p className="font-bold text-stone-900">Total : {order.totalAmount.toFixed(2)}€</p>
+                  <p className="font-bold text-stone-900">Total : {order.totalAmount.toFixed(2)}DH</p>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">Détails</Button>
                     {order.status === 'confirmed' && <Button size="sm">Préparer</Button>}
@@ -202,7 +202,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                     <div className="flex-1">
                       <h3 className="font-semibold text-stone-900">{product.name}</h3>
                       <p className="text-lg font-bold text-[#2D5016]">
-                        {product.pricePerUnit.toFixed(2)}€/{product.unit}
+                        {product.pricePerUnit.toFixed(2)}DH/{product.unit}
                       </p>
                       <p className="text-sm text-stone-500">
                         {product.quantityAvailable} {product.unit} en stock
@@ -231,7 +231,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                       <p className="font-medium text-stone-900">{order.buyerName}</p>
                       <p className="text-sm text-stone-500">{order.items.length} article(s)</p>
                     </div>
-                    <p className="font-bold text-[#2D5016]">{order.totalAmount.toFixed(2)}€</p>
+                    <p className="font-bold text-[#2D5016]">{order.totalAmount.toFixed(2)}DH</p>
                   </div>
                 ))}
               </div>

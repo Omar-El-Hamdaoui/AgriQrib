@@ -91,6 +91,14 @@ export const Header = ({ currentView, setCurrentView, userRole, cartCount, setSh
               </span>
             </button>
 
+            {/* Register CTA */}
+            <button
+              onClick={() => setCurrentView('register')}
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5016] text-white text-sm font-semibold hover:bg-[#1e3a0f] transition-all shadow-md"
+            >
+              S'inscrire
+            </button>
+
             {/* Mobile hamburger */}
             <button
               className="md:hidden p-2 rounded-xl text-stone-600 hover:bg-stone-100"

@@ -14,7 +14,7 @@ export const mockCategories = [
 export const mockFarms = [
   {
     id: 'farm-1',
-    farmName: 'Ferme du Soleil Levant',
+    farmName: 'Ferme Agroécologique La Finca',
     description: 'Agriculture biologique depuis 3 générations. Spécialisés dans les légumes de saison.',
     city: 'Aix-en-Provence',
     postalCode: '13100',
@@ -54,7 +54,7 @@ export const mockProducts = [
   {
     id: 'prod-1',
     farmId: 'farm-1',
-    farmName: 'Ferme du Soleil Levant',
+    farmName: 'Ferme Agroécologique La Finca',
     name: 'Tomates Cœur de Bœuf',
     description: 'Tomates charnues et parfumées, idéales en salade.',
     category: 'legumes',
@@ -69,7 +69,7 @@ export const mockProducts = [
   {
     id: 'prod-2',
     farmId: 'farm-1',
-    farmName: 'Ferme du Soleil Levant',
+    farmName: 'Ferme Agroécologique La Finca',
     name: 'Courgettes Bio',
     description: 'Courgettes tendres, récoltées à maturité.',
     category: 'legumes',
@@ -121,7 +121,7 @@ export const mockProducts = [
   {
     id: 'prod-6',
     farmId: 'farm-1',
-    farmName: 'Ferme du Soleil Levant',
+    farmName: 'Ferme Agroécologique La Finca',
     name: 'Aubergines Violettes',
     description: 'Aubergines charnues parfaites pour les gratins.',
     category: 'legumes',
@@ -170,7 +170,7 @@ export const mockOffers = [
 export const mockOrders = [
   {
     id: 'order-1',
-    buyerName: 'Jean Dupont',
+    buyerName: 'Mohamed Benjelloun',
     items: [
       { name: 'Tomates Cœur de Bœuf', quantity: 3, unit: 'kg', price: 4.50 },
       { name: 'Courgettes Bio', quantity: 2, unit: 'kg', price: 3.20 },

@@ -9,6 +9,7 @@ import { CatalogPage }       from './pages/CatalogPage';
 import { FarmsPage }         from './pages/FarmsPage';
 import { ProducerDashboard } from './pages/ProducerDashboard';
 import { BuyerDashboard }    from './pages/BuyerDashboard';
+import { RegisterPage }      from './pages/RegisterPage';
 
 export default function TerroirDirectApp() {
   const [currentView,      setCurrentView]      = useState('home');
@@ -67,6 +68,10 @@ export default function TerroirDirectApp() {
 
       {currentView === 'buyer-dashboard' && (
         <BuyerDashboard setCurrentView={setCurrentView} />
+      )}
+
+      {currentView === 'register' && (
+        <RegisterPage setCurrentView={setCurrentView} />
       )}
 
       <CartSidebar
