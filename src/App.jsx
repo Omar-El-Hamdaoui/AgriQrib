@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import './styles/global.css';
 
+import { AuthProvider, useAuth } from './auth/AuthContext';
 import { Header }            from './components/layout/Header';
 import { CartSidebar }       from './components/features/CartSidebar';
 import { HomePage }          from './pages/HomePage';
@@ -11,12 +12,23 @@ import { ProducerDashboard } from './pages/ProducerDashboard';
 import { BuyerDashboard }    from './pages/BuyerDashboard';
 import { RegisterPage }      from './pages/RegisterPage';
 
-export default function TerroirDirectApp() {
-  const [currentView,      setCurrentView]      = useState('home');
-  const [userRole,         setUserRole]          = useState('buyer'); // 'buyer' | 'producer'
-  const [selectedCategory, setSelectedCategory]  = useState(null);
-  const [cartItems,        setCartItems]         = useState([]);
-  const [showCart,         setShowCart]          = useState(false);
+// ── Contenu principal (à l'intérieur de AuthProvider) ────────────────────────
+function AppContent() {
+  const { status } = useAuth();
+
+  const [currentView,      setCurrentView]     = useState('home');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [cartItems,        setCartItems]        = useState([]);
+  const [showCart,         setShowCart]         = useState(false);
+
+  // Redirection automatique post-login vers le bon dashboard
+  const navigateAfterAuth = (userProfile) => {
+    if (userProfile?.role === 'producer') {
+      setCurrentView('producer-dashboard');
+    } else {
+      setCurrentView('buyer-dashboard');
+    }
+  };
 
   const handleAddToCart = (product, quantity) => {
     const existingIndex = cartItems.findIndex(item => item.id === product.id);
@@ -32,13 +44,26 @@ export default function TerroirDirectApp() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Spinner pendant la restauration de session (appel GET /auth/me)
+  if (status === 'idle') {
+    return (
+      <div className="min-h-screen bg-[#f9f7f4] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#2D5016] to-[#4a7c23] rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-xl">🌿</span>
+          </div>
+          <div className="w-6 h-6 border-2 border-[#2D5016]/30 border-t-[#2D5016] rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f9f7f4]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
 
       <Header
         currentView={currentView}
         setCurrentView={setCurrentView}
-        userRole={userRole}
         cartCount={cartCount}
         setShowCart={setShowCart}
       />
@@ -49,7 +74,6 @@ export default function TerroirDirectApp() {
           setSelectedCategory={setSelectedCategory}
         />
       )}
-
       {currentView === 'catalog' && (
         <CatalogPage
           selectedCategory={selectedCategory}
@@ -57,21 +81,20 @@ export default function TerroirDirectApp() {
           onAddToCart={handleAddToCart}
         />
       )}
-
       {currentView === 'farms' && (
         <FarmsPage setCurrentView={setCurrentView} />
       )}
-
       {currentView === 'producer-dashboard' && (
         <ProducerDashboard setCurrentView={setCurrentView} />
       )}
-
       {currentView === 'buyer-dashboard' && (
         <BuyerDashboard setCurrentView={setCurrentView} />
       )}
-
       {currentView === 'register' && (
-        <RegisterPage setCurrentView={setCurrentView} />
+        <RegisterPage
+          setCurrentView={setCurrentView}
+          onRegistered={navigateAfterAuth}
+        />
       )}
 
       <CartSidebar
@@ -80,25 +103,15 @@ export default function TerroirDirectApp() {
         items={cartItems}
         setItems={setCartItems}
       />
-
-      {/* Role Switcher (dev only) */}
-      <div className="fixed bottom-4 left-4 z-50">
-        <div className="bg-white rounded-xl shadow-lg border border-stone-200 p-2 flex gap-1">
-          {[
-            { role: 'buyer',    label: '👤 Acheteur' },
-            { role: 'producer', label: '🌾 Producteur' },
-          ].map(({ role, label }) => (
-            <button
-              key={role}
-              onClick={() => setUserRole(role)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                ${userRole === role ? 'bg-[#2D5016] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
+  );
+}
+
+// ── Export racine : AuthProvider wrapping tout ────────────────────────────────
+export default function TerroirDirectApp() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

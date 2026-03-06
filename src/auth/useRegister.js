@@ -1,5 +1,7 @@
 // auth/useRegister.js
-// Hook gérant l'état et la navigation du formulaire d'inscription multi-étapes
+// Hook gérant l'état et la navigation du formulaire d'inscription multi-étapes.
+// À la soumission : appel réel vers FastAPI, hydratation de l'AuthContext,
+// puis redirection vers le bon dashboard.
 
 import { useState } from 'react';
 import {
@@ -9,12 +11,16 @@ import {
   validateStep,
   buildPayload,
 } from './registerValidation';
+import { authApi, parseApiError } from './authApi';
+import { useAuth } from './AuthContext';
 
 export const useRegister = ({ onSuccess } = {}) => {
-  const [step, setStep]       = useState(STEPS.ROLE);
-  const [data, setData]       = useState(INITIAL_FORM_DATA);
-  const [errors, setErrors]   = useState({});
-  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const [step, setStep]           = useState(STEPS.ROLE);
+  const [data, setData]           = useState(INITIAL_FORM_DATA);
+  const [errors, setErrors]       = useState({});
+  const [loading, setLoading]     = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const totalSteps = getTotalSteps(data.role);
@@ -22,7 +28,6 @@ export const useRegister = ({ onSuccess } = {}) => {
   // ── Mise à jour d'un champ ──────────────────────────────────
   const setField = (field, value) => {
     setData(prev => ({ ...prev, [field]: value }));
-    // Efface l'erreur du champ dès que l'utilisateur corrige
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
@@ -39,12 +44,8 @@ export const useRegister = ({ onSuccess } = {}) => {
   // ── Navigation ─────────────────────────────────────────────
   const next = () => {
     const errs = validateStep(step, data);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return false;
-    }
+    if (Object.keys(errs).length > 0) { setErrors(errs); return false; }
     setErrors({});
-    // Sauter l'étape FARM si pas producteur
     const nextStep = step + 1;
     if (nextStep === STEPS.FARM && data.role !== 'producer') {
       setStep(STEPS.CONFIRM);
@@ -67,21 +68,36 @@ export const useRegister = ({ onSuccess } = {}) => {
   // ── Soumission finale ───────────────────────────────────────
   const submit = async () => {
     const errs = validateStep(STEPS.CONFIRM, data);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     setLoading(true);
     try {
-      const payload = buildPayload(data);
-      // Simulation d'un appel API (à remplacer par fetch/axios réel)
-      await new Promise(r => setTimeout(r, 1200));
-      console.log('[Register] Payload envoyé :', payload);
+      // 1. Appel POST /auth/register → FastAPI → Supabase → httpOnly cookie posé
+      const payload  = buildPayload(data);
+      const response = await authApi.register(payload);
+
+      // 2. Hydrater le contexte d'auth avec le profil retourné par le serveur.
+      //    Le cookie est déjà stocké dans le navigateur (httpOnly, géré par le serveur).
+      login({
+        ...response.user,
+        farm: response.farm ?? null,
+      });
+
+      // 3. Marquer comme soumis (affiche l'écran de succès)
       setSubmitted(true);
-      onSuccess?.(payload);
+
+      // 4. Callback optionnel (ex: pour rediriger depuis le parent)
+      onSuccess?.(response);
+
     } catch (err) {
-      setErrors({ global: "Une erreur est survenue. Veuillez réessayer." });
+      // Normalise les erreurs API en erreurs de champ ou message global
+      const fieldErrors = parseApiError(err);
+      setErrors(fieldErrors);
+
+      // Si l'erreur concerne l'email (conflit 409), remonter à l'étape identité
+      if (fieldErrors.email) {
+        setStep(STEPS.IDENTITY);
+      }
     } finally {
       setLoading(false);
     }

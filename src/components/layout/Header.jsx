@@ -1,9 +1,14 @@
 // components/layout/Header.jsx
 import { useState } from 'react';
 import { Icons } from '../ui/Icons';
+import { useAuth } from '../../auth/AuthContext';
 
-export const Header = ({ currentView, setCurrentView, userRole, cartCount, setShowCart }) => {
+export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isProducer, logout } = useAuth();
+
+  const dashboardView = isProducer ? 'producer-dashboard' : 'buyer-dashboard';
+  const userInitials  = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
 
   const navItems = [
     { id: 'home',    label: 'Accueil',     icon: <Icons.Home /> },
@@ -29,7 +34,7 @@ export const Header = ({ currentView, setCurrentView, userRole, cartCount, setSh
                 className="text-xl font-bold text-[#2D5016] tracking-tight"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
-                AgriQrib
+                TerroirDirect
               </h1>
               <p className="text-[10px] text-stone-500 -mt-1 tracking-wider uppercase">
                 Du producteur à vous
@@ -76,28 +81,43 @@ export const Header = ({ currentView, setCurrentView, userRole, cartCount, setSh
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
             </button>
 
-            {/* Account */}
-            <button
-              onClick={() =>
-                setCurrentView(userRole === 'producer' ? 'producer-dashboard' : 'buyer-dashboard')
-              }
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-all"
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-[#2D5016] to-[#4a7c23] rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                JD
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-stone-700">
-                Mon compte
-              </span>
-            </button>
-
-            {/* Register CTA */}
-            <button
-              onClick={() => setCurrentView('register')}
-              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5016] text-white text-sm font-semibold hover:bg-[#1e3a0f] transition-all shadow-md"
-            >
-              S'inscrire
-            </button>
+            {/* Account / Register */}
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => setCurrentView(dashboardView)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-all"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#2D5016] to-[#4a7c23] rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                    {userInitials}
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-stone-700">
+                    {user.firstName}
+                  </span>
+                </button>
+                <button
+                  onClick={logout}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-stone-600 hover:bg-stone-100 text-sm font-medium transition-all"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setCurrentView('register')}
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D5016] text-white text-sm font-semibold hover:bg-[#1e3a0f] transition-all shadow-md"
+                >
+                  S'inscrire
+                </button>
+                <button
+                  onClick={() => setCurrentView('login')}
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl border border-stone-300 text-stone-700 text-sm font-medium hover:bg-stone-100 transition-all"
+                >
+                  Connexion
+                </button>
+              </>
+            )}
 
             {/* Mobile hamburger */}
             <button

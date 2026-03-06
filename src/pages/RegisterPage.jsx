@@ -103,13 +103,14 @@ const StepIdentity = ({ data, errors, setField }) => (
     <h2 className="text-2xl font-bold text-stone-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>
       Vos informations
     </h2>
+    <p className="text-stone-500 mb-6">Ces informations correspondent à la table <code className="text-xs bg-stone-100 px-1 py-0.5 rounded">users</code>.</p>
 
     <div className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <Input
             label="Prénom *"
-            placeholder="Ahmed"
+            placeholder="Marie"
             value={data.firstName}
             onChange={e => setField('firstName', e.target.value)}
             maxLength={100}
@@ -119,7 +120,7 @@ const StepIdentity = ({ data, errors, setField }) => (
         <div>
           <Input
             label="Nom *"
-            placeholder="Bennani"
+            placeholder="Dupont"
             value={data.lastName}
             onChange={e => setField('lastName', e.target.value)}
             maxLength={100}
@@ -144,7 +145,7 @@ const StepIdentity = ({ data, errors, setField }) => (
         <Input
           label="Téléphone (optionnel)"
           type="tel"
-          placeholder="+212 6 12 34 56 78"
+          placeholder="+33 6 12 34 56 78"
           value={data.phone}
           onChange={e => setField('phone', e.target.value)}
           maxLength={20}
@@ -223,12 +224,13 @@ const StepFarm = ({ data, errors, setField, toggleCertification }) => (
     <h2 className="text-2xl font-bold text-stone-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>
       Votre exploitation
     </h2>
+    <p className="text-stone-500 mb-6">Ces informations alimentent la table <code className="text-xs bg-stone-100 px-1 py-0.5 rounded">farms</code>.</p>
 
     <div className="space-y-4">
       <div>
         <Input
           label="Nom de la ferme *"
-          placeholder="Ferme Agroécologique La Finca"
+          placeholder="Ferme du Soleil Levant"
           value={data.farmName}
           onChange={e => setField('farmName', e.target.value)}
           maxLength={200}
@@ -307,7 +309,7 @@ const StepFarm = ({ data, errors, setField, toggleCertification }) => (
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1.5">
-            Rayon de disponibilité : <span className="text-[#2D5016] font-bold">{data.deliveryRadius} km</span>
+            Rayon de livraison : <span className="text-[#2D5016] font-bold">{data.deliveryRadius} km</span>
           </label>
           <input
             type="range"
@@ -324,7 +326,7 @@ const StepFarm = ({ data, errors, setField, toggleCertification }) => (
 
         <div>
           <Input
-            label="Commande minimum (DH)"
+            label="Commande minimum (€)"
             type="number"
             min={0}
             placeholder="0"
@@ -385,7 +387,7 @@ const StepConfirm = ({ data, errors, setField }) => {
               Conditions Générales d'Utilisation
             </a>{' '}
             et la{' '}
-            <a href="https://www.fondationdentreprisehermes.org/sites/default/files/pdf/fondation-confidentialite.pdf" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
+            <a href="https://www.economie.gouv.fr/politique-confidentialite" className="text-[#2D5016] underline hover:text-[#1e3a0f]">
               Politique de confidentialité
             </a>. *
           </span>
@@ -401,7 +403,7 @@ const StepConfirm = ({ data, errors, setField }) => {
             {data.acceptNewsletter && <Icons.Check />}
           </div>
           <span className="text-sm text-stone-500">
-            Je souhaite recevoir les nouveautés et offres d'AgriQrib (optionnel).
+            Je souhaite recevoir les nouveautés et offres de Terroir Direct (optionnel).
           </span>
         </label>
       </div>
@@ -447,13 +449,19 @@ const SuccessScreen = ({ data, setCurrentView }) => (
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export const RegisterPage = ({ setCurrentView }) => {
+export const RegisterPage = ({ setCurrentView, onRegistered }) => {
   const {
     step, data, errors, loading, submitted,
     totalSteps, progressPercent,
     setField, toggleCertification,
     next, prev, submit,
-  } = useRegister();
+  } = useRegister({
+    onSuccess: (response) => {
+      // Redirection vers le bon dashboard après inscription réussie
+      // Légèrement différé pour laisser l'écran de succès s'afficher 1.5s
+      setTimeout(() => onRegistered?.(response.user), 1500);
+    },
+  });
 
 
   const stepComponents = {
@@ -467,6 +475,22 @@ export const RegisterPage = ({ setCurrentView }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-xl">
+
+        {/* Logo */}
+        <div
+          className="flex items-center gap-3 mb-8 cursor-pointer"
+          onClick={() => setCurrentView('home')}
+        >
+          <div className="w-10 h-10 bg-gradient-to-br from-[#2D5016] to-[#4a7c23] rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-xl">🌿</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-[#2D5016]" style={{ fontFamily: 'Georgia, serif' }}>
+              TerroirDirect
+            </h1>
+            <p className="text-[10px] text-stone-500 tracking-wider uppercase">Créer un compte</p>
+          </div>
+        </div>
 
         <Card className="p-8 shadow-xl">
           {submitted ? (
