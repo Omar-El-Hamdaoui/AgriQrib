@@ -1,4 +1,3 @@
-// pages/CatalogPage.jsx
 import { useState } from 'react';
 import { mockProducts, mockCategories } from '../data/mockData';
 import { Icons } from '../components/ui/Icons';
