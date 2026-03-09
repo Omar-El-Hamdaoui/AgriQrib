@@ -91,81 +91,54 @@
 //   logout()  : () → void
 //   register(): (userData, farmData?) → { user, farm }
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
-import * as authService from './authService'
+// auth/useLogin.js
+// Hook gérant le formulaire de connexion : validation, appel API, hydratation session.
 
-const AuthContext = createContext(null)
+import { useState } from 'react';
+import { parseApiError } from './authApi';
+import { useAuth } from './AuthContext';
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [farm, setFarm] = useState(null)
-  const [status, setStatus] = useState('idle')  // 'idle' pendant le chargement initial
+const INITIAL = { email: '', password: '', rememberMe: false };
 
-  // Charger la session existante au montage
-  useEffect(() => {
-    authService.getMe().then(result => {
-      if (result) {
-        setUser(result.user)
-        setFarm(result.farm)
-        setStatus('authenticated')
+const validate = ({ email, password }) => {
+  const errors = {};
+  if (!email.trim()) errors.email = "L'email est requis.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Format email invalide.';
+  if (!password) errors.password = 'Le mot de passe est requis.';
+  return errors;
+};
+
+export const useLogin = ({ onSuccess } = {}) => {
+  const { login } = useAuth();
+  const [data, setData] = useState(INITIAL);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const setField = (field, value) => {
+    setData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  const submit = async (e) => {
+    e?.preventDefault();
+    const errs = validate(data);
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
+    setLoading(true);
+    try {
+      // login() du contexte appelle authApi + hydrate user/farm automatiquement
+      const result = await login(data.email.trim().toLowerCase(), data.password);
+      onSuccess?.(result.user);
+    } catch (err) {
+      if (err.status === 400 || err.status === 401) {
+        setErrors({ password: 'Email ou mot de passe incorrect.' });
       } else {
-        setStatus('unauthenticated')
+        setErrors(parseApiError(err));
       }
-    })
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Écouter les changements de session Supabase (refresh automatique, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        setUser(null)
-        setFarm(null)
-        setStatus('unauthenticated')
-        return
-      }
-      if (['TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
-        const result = await authService.getMe()
-        if (result) {
-          setUser(result.user)
-          setFarm(result.farm)
-        }
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function login(email, password) {
-    const result = await authService.login(email, password)
-    setUser(result.user)
-    setFarm(result.farm)
-    setStatus('authenticated')
-    return result
-  }
-
-  async function register(userData, farmData) {
-    const result = await authService.register(userData, farmData)
-    setUser(result.user)
-    setFarm(result.farm)
-    setStatus('authenticated')
-    return result
-  }
-
-  async function logout() {
-    await authService.logout()
-    setUser(null)
-    setFarm(null)
-    setStatus('unauthenticated')
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, farm, status, login, logout, register }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth doit être utilisé dans un <AuthProvider>')
-  return ctx
-}
+  return { data, errors, loading, setField, submit };
+};
