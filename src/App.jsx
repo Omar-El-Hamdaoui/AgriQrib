@@ -3,35 +3,45 @@ import { useState } from 'react';
 import './styles/global.css';
 
 import { AuthProvider, useAuth } from './auth/AuthContext';
-import { Header }            from './components/layout/Header';
-import { CartSidebar }       from './components/features/CartSidebar';
-import { HomePage }          from './pages/HomePage';
-import { CatalogPage }       from './pages/CatalogPage';
-import { FarmsPage }         from './pages/FarmsPage';
+import { Header } from './components/layout/Header';
+import { CartSidebar } from './components/features/CartSidebar';
+import { HomePage } from './pages/HomePage';
+import { CatalogPage } from './pages/CatalogPage';
+import { FarmsPage } from './pages/FarmsPage';
 import { ProducerDashboard } from './pages/ProducerDashboard';
-import { BuyerDashboard }    from './pages/BuyerDashboard';
-import { RegisterPage }      from './pages/RegisterPage';
-import { LoginPage }         from './pages/LoginPage';
+import { BuyerDashboard } from './pages/BuyerDashboard';
+import { RegisterPage } from './pages/RegisterPage';
+import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 // ── Détection de la vue initiale depuis l'URL ─────────────────────────────────
 function getInitialView() {
-  const hashParams  = new URLSearchParams(window.location.hash.substring(1));
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const queryParams = new URLSearchParams(window.location.search);
 
   // Token valide — legacy flow : #access_token=XXX&type=recovery
   if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
+    // ✅ Nettoyer le hash immédiatement — Supabase JS a déjà lu le token
+    window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
   // Token valide — PKCE flow : ?code=XXX
   if (queryParams.get('code')) {
+    // ✅ Nettoyer le query string
+    window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-  // Erreur Supabase dans le hash (ex: #error=access_denied&error_code=otp_expired)
-  // On route quand même vers reset-password pour afficher le bon message d'erreur
+  // Erreur Supabase dans le hash
   if (hashParams.get('error')) {
+    window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
+
+  // ✅ Nettoyer le hash résiduel (#) même si on va sur home
+  if (window.location.hash) {
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+
   return 'home';
 }
 
@@ -39,10 +49,10 @@ function getInitialView() {
 function AppContent() {
   const { status } = useAuth();
 
-  const [currentView,      setCurrentView]     = useState(getInitialView);
+  const [currentView, setCurrentView] = useState(getInitialView);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [cartItems,        setCartItems]        = useState([]);
-  const [showCart,         setShowCart]         = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [showCart, setShowCart] = useState(false);
 
   const navigateAfterAuth = (userProfile) => {
     if (userProfile?.role === 'producer') {
@@ -109,9 +119,9 @@ function AppContent() {
           onAddToCart={handleAddToCart}
         />
       )}
-      {currentView === 'farms'              && <FarmsPage          setCurrentView={setCurrentView} />}
-      {currentView === 'producer-dashboard' && <ProducerDashboard  setCurrentView={setCurrentView} />}
-      {currentView === 'buyer-dashboard'    && <BuyerDashboard     setCurrentView={setCurrentView} />}
+      {currentView === 'farms' && <FarmsPage setCurrentView={setCurrentView} />}
+      {currentView === 'producer-dashboard' && <ProducerDashboard setCurrentView={setCurrentView} />}
+      {currentView === 'buyer-dashboard' && <BuyerDashboard setCurrentView={setCurrentView} />}
       <CartSidebar
         isOpen={showCart}
         onClose={() => setShowCart(false)}
