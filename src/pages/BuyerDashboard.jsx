@@ -11,7 +11,7 @@ const ROLE_LABELS = {
 };
 
 export const BuyerDashboard = ({ setCurrentView }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('orders');
 
   const roleLabel   = ROLE_LABELS[user?.role] ?? 'Acheteur';

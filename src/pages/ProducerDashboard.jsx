@@ -6,7 +6,7 @@ import { Badge, Button, Card } from '../components/ui/primitives';
 import { useAuth }             from '../auth/AuthContext';
 
 export const ProducerDashboard = ({ setCurrentView }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
   const farm        = user?.farm;
