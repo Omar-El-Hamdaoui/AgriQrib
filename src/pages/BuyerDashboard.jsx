@@ -1,4 +1,3 @@
-// pages/BuyerDashboard.jsx
 import { useState } from 'react';
 import { Icons }              from '../components/ui/Icons';
 import { Badge, Button, Card } from '../components/ui/primitives';
