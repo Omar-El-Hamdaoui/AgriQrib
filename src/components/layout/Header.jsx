@@ -5,10 +5,12 @@ import { useAuth } from '../../auth/AuthContext';
 
 export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, isProducer, logout } = useAuth();
+  const { user, status, logout } = useAuth();
 
+  const isAuthenticated = status === 'authenticated';
+  const isProducer = user?.role === 'producer';
   const dashboardView = isProducer ? 'producer-dashboard' : 'buyer-dashboard';
-  const userInitials  = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
+  const userInitials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
 
   const handleLogout = async () => {
     await logout();
@@ -17,9 +19,9 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
   };
 
   const navItems = [
-    { id: 'home',    label: 'Accueil',     icon: <Icons.Home /> },
-    { id: 'catalog', label: 'Catalogue',   icon: <Icons.Package /> },
-    { id: 'farms',   label: 'Producteurs', icon: <Icons.Location /> },
+    { id: 'home', label: 'Accueil', icon: <Icons.Home /> },
+    { id: 'catalog', label: 'Catalogue', icon: <Icons.Package /> },
+    { id: 'farms', label: 'Producteurs', icon: <Icons.Location /> },
   ];
 
   return (
@@ -151,13 +153,28 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
                 {item.label}
               </button>
             ))}
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
               >
                 Déconnexion
               </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setCurrentView('register'); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium bg-[#2D5016] text-white"
+                >
+                  S'inscrire
+                </button>
+                <button
+                  onClick={() => { setCurrentView('login'); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-100"
+                >
+                  Connexion
+                </button>
+              </>
             )}
           </div>
         )}
