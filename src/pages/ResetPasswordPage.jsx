@@ -33,7 +33,7 @@ const PasswordStrength = ({ password }) => {
 };
 
 export const ResetPasswordPage = ({ setCurrentView }) => {
-  const { user, status } = useAuth();
+  useAuth(); // maintient la session active
 
   const [pageStatus, setPageStatus] = useState('waiting');
   const [password, setPassword] = useState('');
@@ -61,15 +61,16 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
   }, []);
 
   // ── Redirection automatique après succès ──────────────────────────────────
-  // Une fois que AuthContext a hydraté l'utilisateur, on redirige vers home
   useEffect(() => {
-    if (pageStatus === 'success' && status === 'authenticated') {
+    if (pageStatus === 'success') {
       const timer = setTimeout(() => {
-        setCurrentView(user?.role === 'producer' ? 'producer-dashboard' : 'buyer-dashboard');
+        // Nettoyer le hash de l'URL avant de rediriger
+        window.history.replaceState(null, '', window.location.pathname);
+        setCurrentView('home');
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [pageStatus, status, user, setCurrentView]);
+  }, [pageStatus, setCurrentView]);
 
   const validate = () => {
     const errs = {};
