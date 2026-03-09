@@ -1,41 +1,43 @@
 // auth/authApi.js
-// Couche réseau : toutes les requêtes HTTP vers le backend FastAPI
-//
-// Conventions :
-//   - credentials: 'include'  → envoie/reçoit le httpOnly cookie automatiquement
-//   - Le backend pose/supprime le cookie ; le JS ne le lit jamais
-//   - Les erreurs HTTP sont normalisées en { message, field? } pour l'UI
+// Couche réseau : remplace les appels HTTP vers FastAPI par le SDK Supabase.
+// L'interface publique (authApi.register / login / logout / me) reste identique
+// pour ne pas casser useLogin, useRegister, AuthContext, etc.
 
-const BASE_URL = process.env.REACT_APP_API_URL ?? 'http://localhost:8000';
+import { supabase } from './supabaseClient';
 
-// ── Helper fetch centralisé ───────────────────────────────────────────────────
+// ── Helper : récupérer le profil complet depuis la DB ────────────────────────
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include', // <-- envoie le cookie httpOnly à chaque requête
-    ...options,
-  });
+async function fetchProfile(uid) {
+  const { data: profile, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', uid)
+    .single();
 
-  if (res.status === 204) return null; // No Content (ex: logout)
+  if (error || !profile) throw Object.assign(new Error('Profil utilisateur introuvable.'), { status: 404 });
 
-  const body = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    // FastAPI renvoie { detail: string | [{ loc, msg, type }] }
-    const detail = body?.detail;
-    const message = Array.isArray(detail)
-      ? detail.map(e => e.msg).join(', ')
-      : detail ?? `Erreur ${res.status}`;
-
-    // Détection des conflits d'email (409)
-    const error = new Error(message);
-    error.status = res.status;
-    error.body   = body;
-    throw error;
+  let farm = null;
+  if (profile.role === 'producer') {
+    const { data } = await supabase
+      .from('farms')
+      .select('*')
+      .eq('user_id', uid)
+      .single();
+    farm = data ?? null;
   }
 
-  return body;
+  return {
+    user: {
+      id: profile.id,
+      email: profile.email,
+      role: profile.role,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      phone: profile.phone ?? null,
+      isVerified: profile.is_verified ?? false,
+    },
+    farm,
+  };
 }
 
 // ── Endpoints d'authentification ──────────────────────────────────────────────
@@ -43,70 +45,135 @@ async function apiFetch(path, options = {}) {
 export const authApi = {
 
   /**
-   * POST /auth/register
-   * Crée l'utilisateur Supabase Auth + profil users + farms (si producteur).
-   * Le backend pose le cookie httpOnly sur succès.
+   * register({ user: UserCreate, farm?: FarmCreate })
+   * Crée le compte Supabase Auth + profil users + farms (si producteur).
    * Retourne : { user: UserProfile, farm?: FarmProfile }
    */
-  register: (payload) =>
-    apiFetch('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+  register: async ({ user: userData, farm: farmData = null }) => {
+    // 1. Créer le compte Auth
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+    });
+
+    if (signUpError) {
+      const msg = signUpError.message.toLowerCase();
+      if (msg.includes('already') || msg.includes('registered')) {
+        throw Object.assign(new Error('Cette adresse email est déjà utilisée.'), { status: 409 });
+      }
+      throw Object.assign(new Error(signUpError.message), { status: 400 });
+    }
+
+    const uid = authData.user.id;
+
+    // 2. Insérer le profil dans `users`
+    const { error: profileError } = await supabase.from('users').insert({
+      id: uid,
+      email: userData.email,
+      role: userData.role,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      phone: userData.phone ?? null,
+    });
+
+    if (profileError) {
+      throw Object.assign(new Error(`Erreur création profil : ${profileError.message}`), { status: 500 });
+    }
+
+    // 3. Insérer la ferme si producteur
+    let farm = null;
+    if (userData.role === 'producer') {
+      if (!farmData) {
+        throw Object.assign(new Error('Les informations de la ferme sont requises.'), { status: 422 });
+      }
+      const { data: farmResult, error: farmError } = await supabase
+        .from('farms')
+        .insert({
+          user_id: uid,
+          farm_name: farmData.farm_name,
+          description: farmData.description ?? null,
+          address: farmData.address,
+          city: farmData.city,
+          postal_code: farmData.postal_code,
+          certifications: farmData.certifications ?? [],
+          delivery_radius_km: farmData.delivery_radius_km ?? 50,
+          minimum_order_amount: farmData.minimum_order_amount ?? 0.0,
+        })
+        .select()
+        .single();
+
+      if (farmError) {
+        throw Object.assign(new Error(`Erreur création ferme : ${farmError.message}`), { status: 500 });
+      }
+      farm = farmResult;
+    }
+
+    return {
+      user: {
+        id: uid,
+        email: userData.email,
+        role: userData.role,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        phone: userData.phone ?? null,
+        isVerified: false,
+      },
+      farm,
+    };
+  },
 
   /**
-   * POST /auth/login
-   * Authentifie un utilisateur existant.
-   * Le backend pose/renouvelle le cookie httpOnly.
-   * Retourne : { user: UserProfile }
+   * login(email, password)
+   * Authentifie l'utilisateur et retourne { user, farm }.
    */
-  login: (email, password) =>
-    apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
+  login: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw Object.assign(new Error('Email ou mot de passe incorrect.'), { status: 401 });
+    }
+
+    return fetchProfile(data.user.id);
+  },
 
   /**
-   * POST /auth/logout
-   * Demande au backend de supprimer le cookie (Set-Cookie: expires=past).
-   * Révoque aussi la session Supabase côté serveur.
+   * logout()
+   * Déconnecte l'utilisateur côté Supabase.
    */
-  logout: () =>
-    apiFetch('/auth/logout', { method: 'POST' }),
+  logout: async () => {
+    await supabase.auth.signOut();
+    return null;
+  },
 
   /**
-   * GET /auth/me
-   * Renvoie le profil de l'utilisateur courant en lisant le cookie.
-   * Utilisé au montage pour restaurer la session sans re-login.
-   * Lance une erreur 401 si le cookie est absent ou expiré.
+   * me()
+   * Retourne le profil de l'utilisateur courant depuis la session active.
+   * Retourne null si aucune session (au lieu de throw 401).
    */
-  me: () =>
-    apiFetch('/auth/me'),
+  me: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
+
+    try {
+      return await fetchProfile(session.user.id);
+    } catch {
+      return null;
+    }
+  },
 };
 
-// ── Normalisation des erreurs API vers les champs du formulaire ───────────────
-// FastAPI/Supabase peuvent renvoyer des erreurs métier spécifiques.
-// On les transforme en { fieldName: 'message' } pour useRegister.
+// ── Normalisation des erreurs pour l'UI ──────────────────────────────────────
 
 export const parseApiError = (error) => {
-  const msg     = error.message ?? '';
-  const status  = error.status;
+  const msg = error.message ?? '';
+  const status = error.status;
 
-  // Email déjà utilisé (Supabase : "User already registered")
-  if (status === 409 || msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+  if (status === 409 || msg.toLowerCase().includes('already')) {
     return { email: 'Cette adresse email est déjà utilisée.' };
   }
-
-  // Erreur de validation FastAPI (422 Unprocessable Entity)
-  if (status === 422 && error.body?.detail) {
-    const fieldErrors = {};
-    for (const e of error.body.detail) {
-      const field = e.loc?.at(-1); // ex: ["body", "email"] → "email"
-      if (field) fieldErrors[field] = e.msg;
-    }
-    if (Object.keys(fieldErrors).length > 0) return fieldErrors;
+  if (status === 422) {
+    return { global: msg };
   }
 
-  // Erreur générique
   return { global: msg || 'Une erreur est survenue. Veuillez réessayer.' };
 };
