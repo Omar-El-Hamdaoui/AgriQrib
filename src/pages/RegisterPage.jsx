@@ -7,7 +7,6 @@ import {
   ROLES,
   CERTIFICATIONS,
   STEPS,
-  getTotalSteps,
 } from '../auth/registerValidation';
 
 const FieldError = ({ msg }) =>
