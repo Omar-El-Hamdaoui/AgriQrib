@@ -1,27 +1,23 @@
 // pages/ResetPasswordPage.jsx
-// Supabase gère tout nativement via onAuthStateChange :
-//   1. L'utilisateur clique le lien email → Supabase valide le token
-//   2. Supabase déclenche l'événement PASSWORD_RECOVERY dans le client JS
-//   3. On appelle supabase.auth.updateUser() avec le nouveau mot de passe
-
 import { useState, useEffect } from 'react';
-import { Button, Card }        from '../components/ui/primitives';
-import { supabase }            from '../auth/supabaseClient';
-import { useAuth }             from '../auth/AuthContext';
+import { Button, Card } from '../components/ui/primitives';
+import { supabase } from '../auth/supabaseClient';
+import { useAuth } from '../auth/AuthContext';
+import { authApi } from '../auth/authApi';
 
 const PasswordStrength = ({ password }) => {
   const rules = [
     { label: '8 caractères min.', ok: password.length >= 8 },
-    { label: 'Une majuscule',     ok: /[A-Z]/.test(password) },
-    { label: 'Une minuscule',     ok: /[a-z]/.test(password) },
-    { label: 'Un chiffre',        ok: /\d/.test(password) },
+    { label: 'Une majuscule', ok: /[A-Z]/.test(password) },
+    { label: 'Une minuscule', ok: /[a-z]/.test(password) },
+    { label: 'Un chiffre', ok: /\d/.test(password) },
   ];
-  const score  = rules.filter(r => r.ok).length;
+  const score = rules.filter(r => r.ok).length;
   const colors = ['bg-stone-200', 'bg-red-400', 'bg-amber-400', 'bg-yellow-400', 'bg-emerald-500'];
   return (
     <div className="mt-2 space-y-2">
       <div className="flex gap-1">
-        {[0,1,2,3].map(i => (
+        {[0, 1, 2, 3].map(i => (
           <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < score ? colors[score] : 'bg-stone-200'}`} />
         ))}
       </div>
@@ -37,33 +33,23 @@ const PasswordStrength = ({ password }) => {
 };
 
 export const ResetPasswordPage = ({ setCurrentView }) => {
-  const { login } = useAuth();
+  const { user, status } = useAuth();
 
-  // 'waiting' : on attend l'événement Supabase PASSWORD_RECOVERY
-  // 'ready'   : token validé, on peut afficher le formulaire
-  // 'error'   : token invalide/expiré
-  // 'success' : mot de passe mis à jour
   const [pageStatus, setPageStatus] = useState('waiting');
-  const [password,   setPassword]   = useState('');
-  const [confirm,    setConfirm]    = useState('');
-  const [showPass,   setShowPass]   = useState(false);
-  const [errors,     setErrors]     = useState({});
-  const [saving,     setSaving]     = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  // ── Écouter l'événement Supabase PASSWORD_RECOVERY ───────────────────────
+  // ── Écouter l'événement PASSWORD_RECOVERY de Supabase ────────────────────
   useEffect(() => {
-    // Supabase JS échange automatiquement le token du hash/code
-    // et déclenche PASSWORD_RECOVERY quand c'est bon
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setPageStatus('ready');
       }
-      // Si on arrive ici sans token valide, Supabase ne déclenche rien
-      // On bascule en erreur après un délai raisonnable
     });
 
-    // Timeout : si Supabase n'a pas déclenché PASSWORD_RECOVERY après 4s
-    // c'est que le token est absent ou invalide
     const timeout = setTimeout(() => {
       setPageStatus(prev => prev === 'waiting' ? 'error' : prev);
     }, 4000);
@@ -73,6 +59,17 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       clearTimeout(timeout);
     };
   }, []);
+
+  // ── Redirection automatique après succès ──────────────────────────────────
+  // Une fois que AuthContext a hydraté l'utilisateur, on redirige vers home
+  useEffect(() => {
+    if (pageStatus === 'success' && status === 'authenticated') {
+      const timer = setTimeout(() => {
+        setCurrentView(user?.role === 'producer' ? 'producer-dashboard' : 'buyer-dashboard');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [pageStatus, status, user, setCurrentView]);
 
   const validate = () => {
     const errs = {};
@@ -91,32 +88,25 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
 
     setSaving(true);
     try {
-      // Supabase met à jour le mot de passe de l'utilisateur connecté via le token de recovery
+      // 1. Mettre à jour le mot de passe via Supabase
       const { error } = await supabase.auth.updateUser({ password });
-
       if (error) {
         setErrors({ global: error.message ?? 'Une erreur est survenue.' });
         setSaving(false);
         return;
       }
 
-      // Récupérer le profil depuis notre backend pour hydrater AuthContext
-      try {
-        const res = await fetch(
-          `${process.env.REACT_APP_API_URL ?? 'http://localhost:8000'}/auth/me`,
-          { credentials: 'include' }
-        );
-        if (res.ok) {
-          const profile = await res.json();
-          login(profile);
-        }
-      } catch {
-        // Pas bloquant — l'utilisateur devra se reconnecter
+      // 2. Hydrater AuthContext avec le profil complet
+      const result = await authApi.me();
+      if (result) {
+        // AuthContext se met à jour via onAuthStateChange (USER_UPDATED)
+        // mais on force ici pour être sûr
       }
 
+      // 3. Afficher l'écran de succès → useEffect redirige automatiquement
       setPageStatus('success');
 
-    } catch (err) {
+    } catch {
       setErrors({ global: 'Impossible de mettre à jour le mot de passe.' });
       setSaving(false);
     }
@@ -172,12 +162,11 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-stone-900 mb-2">Mot de passe mis à jour !</h2>
-            <p className="text-stone-500 text-sm mb-6">
+            <p className="text-stone-500 text-sm mb-2">
               Votre mot de passe a été changé avec succès.
             </p>
-            <Button className="w-full" onClick={() => setCurrentView('login')}>
-              Se connecter
-            </Button>
+            <p className="text-xs text-stone-400 mb-6">Redirection en cours…</p>
+            <div className="w-5 h-5 border-2 border-[#2D5016]/30 border-t-[#2D5016] rounded-full animate-spin mx-auto" />
           </Card>
         </div>
       </div>
@@ -188,7 +177,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-
         <Card className="p-8 shadow-xl">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
