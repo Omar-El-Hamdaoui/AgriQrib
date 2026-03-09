@@ -10,6 +10,12 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
   const dashboardView = isProducer ? 'producer-dashboard' : 'buyer-dashboard';
   const userInitials  = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
 
+  const handleLogout = async () => {
+    await logout();
+    setCurrentView('home');
+    setMobileMenuOpen(false);
+  };
+
   const navItems = [
     { id: 'home',    label: 'Accueil',     icon: <Icons.Home /> },
     { id: 'catalog', label: 'Catalogue',   icon: <Icons.Package /> },
@@ -34,7 +40,7 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
                 className="text-xl font-bold text-[#2D5016] tracking-tight"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
-                TerroirDirect
+                AgriQrib
               </h1>
               <p className="text-[10px] text-stone-500 -mt-1 tracking-wider uppercase">
                 Du producteur à vous
@@ -96,7 +102,7 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
                   </span>
                 </button>
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-stone-600 hover:bg-stone-100 text-sm font-medium transition-all"
                 >
                   Déconnexion
@@ -145,6 +151,14 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
                 {item.label}
               </button>
             ))}
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
+              >
+                Déconnexion
+              </button>
+            )}
           </div>
         )}
       </div>

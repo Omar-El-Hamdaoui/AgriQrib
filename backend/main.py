@@ -11,7 +11,7 @@
 #   SUPABASE_URL=https://xxxx.supabase.co
 #   SUPABASE_SERVICE_KEY=service_role_key   # clé service (jamais exposée au client)
 #   COOKIE_DOMAIN=localhost                 # domaine du cookie
-#   FRONTEND_URL=http://localhost:5173      # pour CORS
+#   FRONTEND_URL=http://localhost:3000      # pour CORS (CRA)
 
 import os
 from datetime import datetime, timezone
@@ -34,9 +34,14 @@ supabase: Client = create_client(
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Terroir Direct API")
 
+# Liste explicite des origines autorisées
+# Inclut CRA (3000) et Vite (5173) pour couvrir les deux cas
+_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+_allowed_origins = list({_frontend_url, "http://localhost:3000", "http://localhost:3001"})
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:5173")],
+    allow_origins=_allowed_origins,
     allow_credentials=True,   # obligatoire pour les cookies cross-origin
     allow_methods=["*"],
     allow_headers=["*"],
@@ -155,7 +160,7 @@ async def register(payload: RegisterPayload, response: Response):
         auth_response = supabase.auth.admin.create_user({
             "email":          user_data.email,
             "password":       user_data.password,
-            "email_confirm":  False,   # envoi d'un email de vérification
+            "email_confirm":  True,    # confirme immédiatement (pas de blocage connexion)
         })
     except Exception as e:
         msg = str(e).lower()
@@ -352,3 +357,95 @@ async def refresh_session(response: Response, td_refresh: Optional[str] = Cookie
     except Exception:
         clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail="Session expirée. Veuillez vous reconnecter.")
+
+
+# ── POST /auth/forgot-password ───────────────────────────────────────────────
+# Envoie un email de réinitialisation si l'email existe.
+# Retourne TOUJOURS 200 — ne révèle jamais si l'email est connu ou non.
+
+class ForgotPasswordPayload(BaseModel):
+    email: EmailStr
+    redirect_url: str = "http://localhost:3000/reset-password"
+
+
+@app.post("/auth/forgot-password", status_code=200)
+async def forgot_password(payload: ForgotPasswordPayload):
+    try:
+        supabase.auth.reset_password_for_email(
+            payload.email,
+            options={"redirect_to": payload.redirect_url},
+        )
+    except Exception:
+        # On absorbe l'erreur silencieusement pour ne pas révéler
+        # si l'adresse email est enregistrée ou non.
+        pass
+    # Toujours la même réponse, qu'il y ait un compte ou non
+    return {"ok": True}
+
+
+# ── POST /auth/reset-password ────────────────────────────────────────────────
+# Appelé depuis ResetPasswordPage après que l'utilisateur a cliqué
+# sur le lien Supabase. Le token de recovery est dans l'URL (#access_token=...).
+# Le frontend l'extrait et l'envoie ici.
+
+class ResetPasswordPayload(BaseModel):
+    access_token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v):
+        import re
+        if not re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$', v):
+            raise ValueError("Mot de passe trop faible (8 car. min, 1 maj, 1 min, 1 chiffre).")
+        return v
+
+
+@app.post("/auth/reset-password", status_code=200)
+async def reset_password(payload: ResetPasswordPayload, response: Response):
+    try:
+        # 1. Vérifier le token de recovery et obtenir l'uid
+        user_response = supabase.auth.get_user(payload.access_token)
+        uid = user_response.user.id
+    except Exception:
+        raise HTTPException(status_code=401, detail="Lien de réinitialisation invalide ou expiré.")
+
+    try:
+        # 2. Mettre à jour le mot de passe via l'API admin
+        supabase.auth.admin.update_user_by_id(
+            uid,
+            {"password": payload.new_password},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour : {e}")
+
+    # 3. Ouvrir une session immédiatement pour connecter l'utilisateur
+    try:
+        profile_result = supabase.table("users").select("*").eq("id", uid).single().execute()
+        profile = profile_result.data
+
+        farm = None
+        if profile and profile.get("role") == "producer":
+            farm_result = supabase.table("farms").select("*").eq("user_id", uid).single().execute()
+            farm = farm_result.data
+
+        # Re-signer pour obtenir un nouveau access token propre
+        sign_in = supabase.auth.admin.create_session(uid)
+        set_auth_cookie(response, sign_in.session.access_token, sign_in.session.refresh_token)
+
+        return {
+            "ok": True,
+            "user": {
+                "id":        profile["id"],
+                "email":     profile["email"],
+                "role":      profile["role"],
+                "firstName": profile["first_name"],
+                "lastName":  profile["last_name"],
+                "phone":     profile.get("phone"),
+                "isVerified": profile.get("is_verified", False),
+            },
+            "farm": farm,
+        }
+    except Exception:
+        # Mot de passe changé mais session non créée — pas bloquant
+        return {"ok": True, "user": None}

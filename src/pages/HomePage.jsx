@@ -77,7 +77,6 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
                 <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400" alt="Fromage artisanal"   className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="space-y-4 pt-8">
-                <img src="https://images.unsplash.com/photo-1518977676601-b53f82ber44?w=400"  alt="Marché fermier"     className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
                 <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400" alt="Agriculteur"        className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
             </div>

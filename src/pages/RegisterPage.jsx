@@ -326,7 +326,7 @@ const StepFarm = ({ data, errors, setField, toggleCertification }) => (
 
         <div>
           <Input
-            label="Commande minimum (€)"
+            label="Commande minimum (DH)"
             type="number"
             min={0}
             placeholder="0"
@@ -403,7 +403,7 @@ const StepConfirm = ({ data, errors, setField }) => {
             {data.acceptNewsletter && <Icons.Check />}
           </div>
           <span className="text-sm text-stone-500">
-            Je souhaite recevoir les nouveautés et offres de Terroir Direct (optionnel).
+            Je souhaite recevoir les nouveautés et offres de AgriQrib (optionnel).
           </span>
         </label>
       </div>
@@ -481,15 +481,6 @@ export const RegisterPage = ({ setCurrentView, onRegistered }) => {
           className="flex items-center gap-3 mb-8 cursor-pointer"
           onClick={() => setCurrentView('home')}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-[#2D5016] to-[#4a7c23] rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-xl">🌿</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-[#2D5016]" style={{ fontFamily: 'Georgia, serif' }}>
-              TerroirDirect
-            </h1>
-            <p className="text-[10px] text-stone-500 tracking-wider uppercase">Créer un compte</p>
-          </div>
         </div>
 
         <Card className="p-8 shadow-xl">
@@ -551,7 +542,7 @@ export const RegisterPage = ({ setCurrentView, onRegistered }) => {
               <p className="text-center text-sm text-stone-500 mt-6">
                 Déjà un compte ?{' '}
                 <button
-                  onClick={() => setCurrentView('home')}
+                  onClick={() => setCurrentView('login')}
                   className="text-[#2D5016] font-medium hover:underline"
                 >
                   Se connecter
