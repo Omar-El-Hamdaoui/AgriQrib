@@ -21,7 +21,8 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
   const navItems = [
     { id: 'home', label: 'Accueil', icon: <Icons.Home /> },
     { id: 'catalog', label: 'Catalogue', icon: <Icons.Package /> },
-    { id: 'farms', label: 'Producteurs', icon: <Icons.Location /> },
+    { id: 'map', label: 'Carte', icon: <Icons.Location /> },
+    { id: 'farms', label: 'Producteurs', icon: <Icons.User /> },
   ];
 
   return (

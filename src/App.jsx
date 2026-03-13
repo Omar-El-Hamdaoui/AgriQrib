@@ -13,6 +13,7 @@ import { BuyerDashboard } from './pages/BuyerDashboard';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { MapPage } from './pages/MapPage';
 
 // ── Détection de la vue initiale depuis l'URL ─────────────────────────────────
 function getInitialView() {
@@ -119,6 +120,7 @@ function AppContent() {
           onAddToCart={handleAddToCart}
         />
       )}
+      {currentView === 'map' && <MapPage setCurrentView={setCurrentView} />}
       {currentView === 'farms' && <FarmsPage setCurrentView={setCurrentView} />}
       {currentView === 'producer-dashboard' && <ProducerDashboard setCurrentView={setCurrentView} />}
       {currentView === 'buyer-dashboard' && <BuyerDashboard setCurrentView={setCurrentView} />}
