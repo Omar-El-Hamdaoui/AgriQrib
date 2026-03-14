@@ -78,7 +78,7 @@ export function ContactModal({ listing, currentUserId, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
               <div>
                 <span style={{ color: '#6b7280' }}>Prix accepté : </span>
-                <strong style={{ color: '#166534' }}>{listing.agreed_price_per_unit} €/kg</strong>
+                <strong style={{ color: '#166534' }}>{listing.agreed_price_per_unit} DH/kg</strong>
               </div>
               <div>
                 <span style={{ color: '#6b7280' }}>Quantité : </span>
@@ -87,7 +87,7 @@ export function ContactModal({ listing, currentUserId, onClose }) {
               <div style={{ gridColumn: '1/-1' }}>
                 <span style={{ color: '#6b7280' }}>Montant total estimé : </span>
                 <strong style={{ color: '#166534' }}>
-                  {(listing.agreed_price_per_unit * listing.quantity_kg).toFixed(2)} €
+                  {(listing.agreed_price_per_unit * listing.quantity_kg).toFixed(2)} DH
                 </strong>
               </div>
             </div>

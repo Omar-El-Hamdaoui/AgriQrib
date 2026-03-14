@@ -57,6 +57,31 @@ function AppContent() {
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [featuredListings, setFeaturedListings] = useState([]);
+  const [featuredLoading, setFeaturedLoading]   = useState(true);
+
+  // Charger les 3 produits mis en avant (annonces actives les plus récentes)
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      setFeaturedLoading(true);
+      const { data } = await supabase
+        .from('listings')
+        .select(`
+          id, product_name, quantity_kg, asking_price_per_unit,
+          quality_grade, status, offer_count, current_best_offer,
+          available_from, certifications, latitude, longitude,
+          farms(farm_name, city, rating),
+          users!listings_producer_id_fkey(first_name, last_name)
+        `)
+        .in('status', ['active', 'negotiating'])
+        .gte('available_until', new Date().toISOString().split('T')[0])
+        .order('created_at', { ascending: false })
+        .limit(3);
+      setFeaturedListings(data || []);
+      setFeaturedLoading(false);
+    };
+    fetchFeatured();
+  }, []);
 
   // Charger + écouter le nombre de notifs non lues
   useEffect(() => {
@@ -141,14 +166,15 @@ function AppContent() {
         unreadNotifs={unreadNotifs}
       />
       {currentView === 'home' && (
-        <HomePage setCurrentView={setCurrentView} setSelectedCategory={setSelectedCategory} />
+        <HomePage
+          setCurrentView={setCurrentView}
+          setSelectedCategory={setSelectedCategory}
+          featuredListings={featuredListings}
+          featuredLoading={featuredLoading}
+        />
       )}
       {currentView === 'catalog' && (
-        <CatalogPage
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          onAddToCart={handleAddToCart}
-        />
+        <CatalogPage setCurrentView={setCurrentView} />
       )}
       {currentView === 'map'           && <MapPage           setCurrentView={setCurrentView} />}
       {currentView === 'farms'         && <FarmsPage         setCurrentView={setCurrentView} />}

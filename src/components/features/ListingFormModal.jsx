@@ -259,7 +259,7 @@ export function ListingFormModal({ userCoords, onClose, onCreated }) {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <FormField label="Prix souhaité *" hint="€ / unité">
+                <FormField label="Prix souhaité *" hint="DH / unité">
                   <input
                     type="number" step="0.01" min={0}
                     placeholder="ex: 1.20"
@@ -373,7 +373,7 @@ export function ListingFormModal({ userCoords, onClose, onCreated }) {
                   <div><strong>Produit:</strong> {form.product_name || '–'}</div>
                   <div><strong>Quantité:</strong> {form.quantity_kg} {form.unit}</div>
                   <div><strong>Qualité:</strong> {QUALITY_OPTIONS.find(q => q.value === form.quality_grade)?.label}</div>
-                  <div><strong>Prix:</strong> {form.asking_price_per_unit} €/{form.unit}</div>
+                  <div><strong>Prix:</strong> {form.asking_price_per_unit} DH/{form.unit}</div>
                   <div><strong>Récolte:</strong> {form.harvest_date}</div>
                   <div><strong>Dispo:</strong> {form.available_from}</div>
                 </div>

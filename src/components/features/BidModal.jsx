@@ -229,10 +229,10 @@ export function BidModal({ listing, onClose, onSubmitted }) {
             border: '1px solid #bbf7d0',
             display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10,
           }}>
-            <StatChip icon="💰" label="Prix demandé" value={`${listing.asking_price_per_unit} €/kg`} />
+            <StatChip icon="💰" label="Prix demandé" value={`${listing.asking_price_per_unit} DH/kg`} />
             <StatChip icon="🔥" label="Meilleure offre" value={
               listing.current_best_offer
-                ? `${listing.current_best_offer} €/kg`
+                ? `${listing.current_best_offer} DH/kg`
                 : 'Aucune offre'
             } highlight={!!listing.current_best_offer} />
             <StatChip icon="👥" label="Offres reçues" value={`${listing.offer_count || 0}`} />
@@ -284,7 +284,7 @@ export function BidModal({ listing, onClose, onSubmitted }) {
                   background: '#eff6ff', borderRadius: 10, padding: 12,
                   border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af',
                 }}>
-                  ✏️ Vous avez déjà soumis une offre à <strong>{myBid.price_per_unit} €/kg</strong>.
+                  ✏️ Vous avez déjà soumis une offre à <strong>{myBid.price_per_unit} DH/kg</strong>.
                   Vous pouvez la modifier ci-dessous.
                 </div>
               )}
@@ -292,12 +292,12 @@ export function BidModal({ listing, onClose, onSubmitted }) {
               {/* Prix */}
               <div>
                 <label style={labelStyle}>
-                  Votre prix proposé (€ / {listing.unit || 'kg'}) *
+                  Votre prix proposé (DH / {listing.unit || 'kg'}) *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="number" step="0.01" min={0}
-                    placeholder={`Prix demandé : ${listing.asking_price_per_unit} €`}
+                    placeholder={`Prix demandé : ${listing.asking_price_per_unit} DH`}
                     value={offerPrice}
                     onChange={e => setOfferPrice(e.target.value)}
                     style={{ ...formInputStyle, paddingRight: priceDiff ? 90 : 12 }}
@@ -358,10 +358,10 @@ export function BidModal({ listing, onClose, onSubmitted }) {
                     💼 Estimation de la transaction
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#15803d' }}>
-                    {(parseFloat(offerPrice) * parseFloat(offerQty)).toFixed(2)} €
+                    {(parseFloat(offerPrice) * parseFloat(offerQty)).toFixed(2)} DH
                   </div>
                   <div style={{ fontSize: 12, color: '#4ade80' }}>
-                    {offerQty} kg × {offerPrice} €/kg
+                    {offerQty} kg × {offerPrice} DH/kg
                   </div>
                 </div>
               )}
@@ -451,7 +451,7 @@ function BidCard({ bid, rank, askingPrice, onAccept, accepting, isTop, isAgreed 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>
-            {bid.price_per_unit} €/kg
+            {bid.price_per_unit} DH/kg
           </div>
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
             {bid.users?.first_name} {bid.users?.last_name?.charAt(0)}.

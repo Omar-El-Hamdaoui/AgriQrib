@@ -71,6 +71,13 @@ function FlyToUser({ coords }) {
   return null;
 }
 
+// ── Exposer la ref Leaflet au composant parent ────────────────────────────────
+function SetMapRef({ mapRef }) {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+}
+
 // ── Filtres ───────────────────────────────────────────────────────────────────
 const DEFAULT_FILTERS = {
   product: '',
@@ -83,11 +90,11 @@ const DEFAULT_FILTERS = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function MapPage({ setCurrentView }) {
-  const { user } = useAuth();
-  // Le rôle est directement sur user (pas de profile séparé dans AuthContext)
+  const { user, farm } = useAuth();
   const userRole    = user?.role ?? '';
   const isProducer  = userRole === 'producer';
   const isCollector = ['buyer_individual', 'buyer_restaurant', 'buyer_transit'].includes(userRole);
+  const isGuest     = !user; // visiteur non connecté
 
   const [userCoords, setUserCoords] = useState(null);
   const [geoError, setGeoError] = useState(null);
@@ -107,36 +114,70 @@ export function MapPage({ setCurrentView }) {
 
   const realtimeRef = useRef(null);
   const [positionSource, setPositionSource] = useState('auto'); // 'auto' | 'db' | 'gps'
+  const mapRef = useRef(null); // référence à l'instance Leaflet
+
+  // ── Écouter les événements de navigation depuis FarmsPage / CatalogPage ───
+  useEffect(() => {
+    // Focus sur une ferme (depuis FarmsPage)
+    const handleFocusFarm = (e) => {
+      const { lat, lng } = e.detail;
+      if (lat && lng && mapRef.current) {
+        mapRef.current.flyTo([lat, lng], 13, { duration: 1.2 });
+      }
+    };
+
+    // Focus sur une annonce spécifique (ouvrir son panneau latéral)
+    const handleFocusListing = (e) => {
+      const listing = e.detail;
+      if (!listing) return;
+      // Centrer sur l'annonce
+      if (listing.latitude && listing.longitude && mapRef.current) {
+        mapRef.current.flyTo([listing.latitude, listing.longitude], 14, { duration: 1.2 });
+      }
+      // Ouvrir le panneau latéral
+      setSelectedListing(listing);
+      setShowSidePanel(true);
+    };
+
+    window.addEventListener('map-focus-farm', handleFocusFarm);
+    window.addEventListener('map-focus-listing', handleFocusListing);
+    return () => {
+      window.removeEventListener('map-focus-farm', handleFocusFarm);
+      window.removeEventListener('map-focus-listing', handleFocusListing);
+    };
+  }, []);
 
   // ── 1. Géolocalisation ───────────────────────────────────────────────────
-  // Priorité : position enregistrée en base → GPS → fallback
+  // Connecté : base → GPS → fallback | Invité : GPS → fallback direct
   useEffect(() => {
     let cancelled = false;
 
     const init = async () => {
       setGeoLoading(true);
 
-      // 1a. Chercher une position déjà enregistrée pour cet utilisateur
-      const { data: savedLoc } = await supabase
-        .from('user_locations')
-        .select('latitude, longitude')
-        .eq('user_id', user.id)
-        .single();
+      // 1a. Utilisateur connecté : chercher position sauvegardée en base
+      if (user?.id) {
+        const { data: savedLoc } = await supabase
+          .from('user_locations')
+          .select('latitude, longitude')
+          .eq('user_id', user.id)
+          .single();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (savedLoc?.latitude && savedLoc?.longitude) {
-        // Position trouvée en base → on l'utilise directement
-        setUserCoords([savedLoc.latitude, savedLoc.longitude]);
-        setPositionSource('db');
-        setGeoLoading(false);
-        return;
+        if (savedLoc?.latitude && savedLoc?.longitude) {
+          setUserCoords([savedLoc.latitude, savedLoc.longitude]);
+          setPositionSource('db');
+          setGeoLoading(false);
+          return;
+        }
       }
 
-      // 1b. Pas de position en base → demander le GPS
+      // 1b. GPS navigateur (connecté sans position sauvegardée, ou invité)
       if (!navigator.geolocation) {
         setGeoError('Géolocalisation non supportée par votre navigateur.');
-        setUserCoords([33.8935, -5.5547]); // fallback Meknès
+        setUserCoords([33.8935, -5.5547]);
+        setPositionSource('fallback');
         setGeoLoading(false);
         return;
       }
@@ -149,18 +190,20 @@ export function MapPage({ setCurrentView }) {
           setPositionSource('gps');
           setGeoLoading(false);
 
-          // Sauvegarder en base
-          await supabase.from('user_locations').upsert({
-            user_id: user.id,
-            latitude: coords[0],
-            longitude: coords[1],
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' });
+          // Sauvegarder en base seulement si connecté
+          if (user?.id) {
+            await supabase.from('user_locations').upsert({
+              user_id: user.id,
+              latitude: coords[0],
+              longitude: coords[1],
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+          }
         },
         () => {
           if (cancelled) return;
-          setGeoError('Position GPS indisponible. Utilisez le bouton de position manuelle.');
-          setUserCoords([33.8935, -5.5547]); // fallback Meknès
+          setGeoError('Position GPS indisponible.');
+          setUserCoords([33.8935, -5.5547]);
           setPositionSource('fallback');
           setGeoLoading(false);
         },
@@ -170,7 +213,7 @@ export function MapPage({ setCurrentView }) {
 
     init();
     return () => { cancelled = true; };
-  }, [user.id]);
+  }, [user?.id]);
 
   // ── 2. Charger les annonces proches ──────────────────────────────────────
   const fetchListings = useCallback(async () => {
@@ -321,7 +364,7 @@ export function MapPage({ setCurrentView }) {
         </button>
 
         {/* 🛠️ Sélecteur de position fictive — dev uniquement */}
-        {import.meta.env.DEV && (
+        {import.meta.env.DEV && user?.id && (
           <PositionOverride
             currentCoords={userCoords}
             positionSource={positionSource}
@@ -454,6 +497,9 @@ export function MapPage({ setCurrentView }) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
+            {/* Exposer la ref Leaflet */}
+            <SetMapRef mapRef={mapRef} />
+
             {/* Recadrage automatique */}
             {userCoords && <FlyToUser coords={userCoords} />}
 
@@ -492,7 +538,7 @@ export function MapPage({ setCurrentView }) {
                 <Tooltip direction="top" offset={[0, -38]} opacity={0.95}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{listing.product_name}</div>
                   <div style={{ fontSize: 11, color: '#6b7280' }}>
-                    {listing._distanceKm} km · {listing.asking_price_per_unit} €/kg
+                    {listing._distanceKm} km · {listing.asking_price_per_unit} DH/kg
                     {listing.offer_count > 0 && ` · 🔥 ${listing.offer_count} offre(s)`}
                   </div>
                 </Tooltip>
@@ -535,10 +581,12 @@ export function MapPage({ setCurrentView }) {
           listing={selectedListing}
           isProducer={isProducer}
           isCollector={isCollector}
-          currentUserId={user.id}
+          isGuest={isGuest}
+          currentUserId={user?.id}
           onClose={() => { setShowSidePanel(false); setSelectedListing(null); }}
           onBid={() => setShowBidModal(true)}
           onContact={() => setShowContactModal(true)}
+          onLogin={(view) => setCurrentView(view)}
         />
       )}
 
@@ -571,7 +619,7 @@ export function MapPage({ setCurrentView }) {
 }
 
 // ── Panneau latéral détail annonce ────────────────────────────────────────────
-function ListingSidePanel({ listing, isProducer, isCollector, currentUserId, onClose, onBid, onContact }) {
+function ListingSidePanel({ listing, isProducer, isCollector, isGuest, currentUserId, onClose, onBid, onContact, onLogin }) {
   const isOwner = listing.producer_id === currentUserId;
   const isWinner = listing.agreed_with_user_id === currentUserId;
   const isAgreed = listing.status === 'agreed';
@@ -757,19 +805,42 @@ function ListingSidePanel({ listing, isProducer, isCollector, currentUserId, onC
           </button>
         )}
 
-        {/* Fallback : si le rôle n'est pas encore chargé, on affiche quand même le bouton */}
-        {!isCollector && !isProducer && !isAgreed && (
-          <button
-            onClick={onBid}
-            style={{
-              width: '100%', padding: '12px 0', borderRadius: 10,
-              background: 'linear-gradient(135deg, #2D5016, #4a7c23)',
-              color: 'white', border: 'none', fontSize: 15, fontWeight: 800,
-              cursor: 'pointer', boxShadow: '0 3px 10px rgba(45,80,22,0.3)',
-            }}
-          >
-            {listing.offer_count > 0 ? '⚔️ Surenchérir' : '💬 Faire une offre'}
-          </button>
+        {/* Invité → CTA connexion/inscription */}
+        {isGuest && !isAgreed && (
+          <div style={{
+            background: 'linear-gradient(135deg, #f0f7e6, #e8f5d0)',
+            borderRadius: 12, padding: 14,
+            border: '1px solid #bbf7d0',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 13, color: '#374151', marginBottom: 12, lineHeight: 1.5 }}>
+              🔒 Connectez-vous pour faire une offre ou enchérir sur cette annonce
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => onLogin('login')}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 9,
+                  background: 'white', color: '#2D5016',
+                  border: '1.5px solid #2D5016', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => onLogin('register')}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 9,
+                  background: 'linear-gradient(135deg, #2D5016, #4a7c23)',
+                  color: 'white', border: 'none', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', boxShadow: '0 2px 6px rgba(45,80,22,0.25)',
+                }}
+              >
+                S'inscrire
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Producteur → gérer les offres */}

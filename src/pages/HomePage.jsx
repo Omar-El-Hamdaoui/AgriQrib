@@ -1,10 +1,27 @@
 // pages/HomePage.jsx
-import { mockCategories, mockProducts } from '../data/mockData';
+import { mockCategories } from '../data/mockData';
 import { Icons } from '../components/ui/Icons';
 import { Button } from '../components/ui/primitives';
-import { ProductCard } from '../components/features/ProductCard';
 
-export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
+const QUALITY_LABELS = {
+  standard: 'Standard', premium: 'Premium', bio: 'Bio AB',
+  bio_premium: 'Bio Premium', label_rouge: 'Label Rouge', aop: 'AOP', igp: 'IGP',
+};
+const QUALITY_COLORS = {
+  standard: '#6b7280', premium: '#0ea5e9', bio: '#16a34a',
+  bio_premium: '#15803d', label_rouge: '#dc2626', aop: '#9333ea', igp: '#ea580c',
+};
+
+export const HomePage = ({ setCurrentView, setSelectedCategory, featuredListings = [], featuredLoading = true }) => {
+
+  const goToListingOnMap = (listing) => {
+    setCurrentView('map');
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('map-focus-listing', { detail: listing }));
+    }, 80);
+  };
+
+  return (
   <div className="min-h-screen">
 
     {/* ── Hero ──────────────────────────────────────────────── */}
@@ -73,11 +90,11 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
             <div className="absolute -inset-4 bg-gradient-to-br from-[#2D5016]/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400" alt="Légumes frais"       className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
-                <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400" alt="Fromage artisanal"   className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400" alt="Légumes frais"     className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400" alt="Fromage artisanal" className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="space-y-4 pt-8">
-                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400" alt="Agriculteur"        className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400" alt="Agriculteur"      className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
             </div>
           </div>
@@ -114,31 +131,23 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
       </div>
     </section>
 
-    {/* ── Featured products ─────────────────────────────────── */}
-    <section className="py-16 bg-[#f9f7f4]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
-              Produits du moment
-            </h2>
-            <p className="text-stone-600 mt-2">Fraîchement récoltés cette semaine</p>
-          </div>
-          <Button variant="outline" onClick={() => setCurrentView('catalog')}>
-            Voir tout <Icons.ChevronRight />
-          </Button>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockProducts.slice(0, 3).map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </div>
-    </section>
+    <div className="relative h-24 w-full bg-white overflow-hidden">
+      <svg 
+        viewBox="0 0 1440 120" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="absolute bottom-0 w-full h-full preserve-3d"
+        preserveAspectRatio="none"
+      >
+        <path 
+          d="M0 120L1440 120L1440 0C1440 0 1140 80 720 80C300 80 0 0 0 0L0 120Z" 
+          fill="#f9fafb" /* Une couleur très légèrement grisée pour marquer le changement */
+        />
+      </svg>
+    </div>
 
     {/* ── How it works ──────────────────────────────────────── */}
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-[#f9fafb]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-stone-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
@@ -149,7 +158,7 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
         <div className="grid md:grid-cols-3 gap-8">
           {[
             { icon: '🔍', title: 'Parcourez', desc: 'Explorez les produits des fermes près de chez vous' },
-            { icon: '🤝', title: 'Négociez', desc: 'Faites une offre pour les achats en volume' },
+            { icon: '⚔️', title: 'Surenchérissez', desc: 'Fixez le prix et remportez le lot !' },
             { icon: '🚚', title: 'Recevez',  desc: 'Retrait à la ferme ou livraison à domicile' },
           ].map((step, idx) => (
             <div key={idx} className="relative text-center p-8">
@@ -177,10 +186,12 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
           Rejoignez notre réseau et vendez directement aux particuliers et restaurants de votre région.
           Pas de commission cachée, juste des ventes directes.
         </p>
-        <Button variant="secondary" size="lg">
+        <Button variant="secondary" size="lg" onClick={() => setCurrentView('register')}>
           Créer ma ferme <Icons.ChevronRight />
         </Button>
       </div>
     </section>
+
   </div>
-);
+  );
+};
