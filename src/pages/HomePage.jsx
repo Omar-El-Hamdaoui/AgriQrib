@@ -3,23 +3,8 @@ import { mockCategories } from '../data/mockData';
 import { Icons } from '../components/ui/Icons';
 import { Button } from '../components/ui/primitives';
 
-const QUALITY_LABELS = {
-  standard: 'Standard', premium: 'Premium', bio: 'Bio AB',
-  bio_premium: 'Bio Premium', label_rouge: 'Label Rouge', aop: 'AOP', igp: 'IGP',
-};
-const QUALITY_COLORS = {
-  standard: '#6b7280', premium: '#0ea5e9', bio: '#16a34a',
-  bio_premium: '#15803d', label_rouge: '#dc2626', aop: '#9333ea', igp: '#ea580c',
-};
 
 export const HomePage = ({ setCurrentView, setSelectedCategory, featuredListings = [], featuredLoading = true }) => {
-
-  const goToListingOnMap = (listing) => {
-    setCurrentView('map');
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('map-focus-listing', { detail: listing }));
-    }, 80);
-  };
 
   return (
   <div className="min-h-screen">

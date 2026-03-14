@@ -15,10 +15,6 @@ const QUALITY_COLORS = {
   bio_premium: '#15803d', label_rouge: '#dc2626', aop: '#9333ea', igp: '#ea580c',
 };
 
-function fmtDate(d) {
-  return d ? new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'short' }) : '—';
-}
-
 // ── Composant principal ───────────────────────────────────────────────────────
 export const FarmsPage = ({ setCurrentView }) => {
   const [farms, setFarms]           = useState([]);

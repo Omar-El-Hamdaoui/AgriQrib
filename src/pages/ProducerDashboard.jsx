@@ -1,8 +1,6 @@
 // pages/ProducerDashboard.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { supabase }            from '../auth/supabaseClient';
-import { Icons }               from '../components/ui/Icons';
-import { Badge, Button, Card } from '../components/ui/primitives';
 import { useAuth }             from '../auth/AuthContext';
 
 const COMMISSION_RATE = 0.02; // 2%

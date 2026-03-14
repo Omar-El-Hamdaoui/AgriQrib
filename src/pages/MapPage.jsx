@@ -90,7 +90,7 @@ const DEFAULT_FILTERS = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function MapPage({ setCurrentView }) {
-  const { user, farm } = useAuth();
+  const { user } = useAuth();
   const userRole    = user?.role ?? '';
   const isProducer  = userRole === 'producer';
   const isCollector = ['buyer_individual', 'buyer_restaurant', 'buyer_transit'].includes(userRole);

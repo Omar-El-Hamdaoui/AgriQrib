@@ -53,7 +53,7 @@ function AppContent() {
   const { user, status } = useAuth();
 
   const [currentView, setCurrentView] = useState(getInitialView);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [setSelectedCategory] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
@@ -115,18 +115,6 @@ function AppContent() {
     } else {
       setCurrentView('buyer-dashboard');
     }
-  };
-
-  const handleAddToCart = (product, quantity) => {
-    const existingIndex = cartItems.findIndex(item => item.id === product.id);
-    if (existingIndex >= 0) {
-      const updated = [...cartItems];
-      updated[existingIndex].quantity += quantity;
-      setCartItems(updated);
-    } else {
-      setCartItems([...cartItems, { ...product, quantity, price: product.pricePerUnit }]);
-    }
-    setShowCart(true);
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
