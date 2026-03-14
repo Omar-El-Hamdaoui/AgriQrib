@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { useAuth } from '../../auth/AuthContext';
 
-export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) => {
+export const Header = ({ currentView, setCurrentView, cartCount, setShowCart, unreadNotifs = 0 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, status, logout } = useAuth();
 
@@ -85,9 +85,19 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2.5 rounded-xl text-stone-600 hover:bg-stone-100 transition-all hidden sm:block">
+            <button onClick={() => setCurrentView('notifications')} style={{ position: 'relative' }} className="relative p-2.5 rounded-xl text-stone-600 hover:bg-stone-100 transition-all hidden sm:block">
               <Icons.Bell />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+              {unreadNotifs > 0 && (
+                <span style={{
+                  position: 'absolute', top: -6, right: -6,
+                  background: '#ef4444', color: 'white',
+                  borderRadius: '50%', width: 18, height: 18,
+                  fontSize: 10, fontWeight: 800,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                </span>
+              )}
             </button>
 
             {/* Account / Register */}
@@ -154,6 +164,21 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart }) 
                 {item.label}
               </button>
             ))}
+            <button
+              onClick={() => { setCurrentView('notifications'); setMobileMenuOpen(false); }}
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all
+                ${currentView === 'notifications'
+                  ? 'bg-[#2D5016]/10 text-[#2D5016]'
+                  : 'text-stone-600 hover:bg-stone-100'}`}
+            >
+              <Icons.Bell />
+              Notifications
+              {unreadNotifs > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                </span>
+              )}
+            </button>
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}

@@ -95,10 +95,19 @@ export function BidModal({ listing, onClose, onSubmitted }) {
         .eq('id', myBid.id));
     } else {
       ({ error: err } = await supabase.from('bids').insert(payload));
-      // Le trigger SQL `trg_bid_inserted` gère automatiquement :
-      // - offer_count++
-      // - current_best_offer mis à jour
-      // - status 'active' → 'negotiating'
+
+      // BUG 1 FIX : passer le statut à 'negotiating' dès la première offre
+      if (!err) {
+        await supabase
+          .from('listings')
+          .update({
+            status: 'negotiating',
+            current_best_offer: parseFloat(offerPrice),
+            offer_count: 1,
+          })
+          .eq('id', listing.id)
+          .eq('status', 'active'); // seulement si encore active (évite d'écraser un statut ultérieur)
+      }
     }
 
     setSubmitting(false);
@@ -155,6 +164,26 @@ export function BidModal({ listing, onClose, onSubmitted }) {
       .update({ is_winning: false, is_accepted: false })
       .eq('listing_id', listing.id)
       .neq('id', bid.id);
+
+    // 5. Notifier les deux parties : contact débloqué
+    await supabase.from('notifications').insert([
+      {
+        user_id:    listing.producer_id,
+        type:       'contact_unlocked',
+        title:      '🔓 Nouveau contact débloqué',
+        body:       `Vous avez conclu un accord sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg. Les coordonnées de votre collecteur sont maintenant disponibles.`,
+        listing_id: listing.id,
+        bid_id:     bid.id,
+      },
+      {
+        user_id:    bid.bidder_id,
+        type:       'contact_unlocked',
+        title:      '🔓 Nouveau contact débloqué',
+        body:       `Votre offre sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg a été acceptée. Les coordonnées du producteur sont maintenant disponibles.`,
+        listing_id: listing.id,
+        bid_id:     bid.id,
+      },
+    ]);
 
     setSubmitting(false);
 

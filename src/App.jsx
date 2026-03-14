@@ -1,19 +1,21 @@
 // App.jsx – Point d'entrée principal
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './styles/global.css';
 
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import { supabase } from './auth/supabaseClient';
 import { Header } from './components/layout/Header';
 import { CartSidebar } from './components/features/CartSidebar';
 import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { FarmsPage } from './pages/FarmsPage';
+import { MapPage } from './pages/MapPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { ProducerDashboard } from './pages/ProducerDashboard';
 import { BuyerDashboard } from './pages/BuyerDashboard';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { MapPage } from './pages/MapPage';
 
 // ── Détection de la vue initiale depuis l'URL ─────────────────────────────────
 function getInitialView() {
@@ -48,12 +50,39 @@ function getInitialView() {
 
 // ── Contenu principal ─────────────────────────────────────────────────────────
 function AppContent() {
-  const { status } = useAuth();
+  const { user, status } = useAuth();
 
   const [currentView, setCurrentView] = useState(getInitialView);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  // Charger + écouter le nombre de notifs non lues
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchUnread = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      setUnreadNotifs(count || 0);
+    };
+
+    fetchUnread();
+
+    const channel = supabase
+      .channel(`app-notifs-${user.id}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, fetchUnread)
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user?.id]);
 
   const navigateAfterAuth = (userProfile) => {
     if (userProfile?.role === 'producer') {
@@ -109,6 +138,7 @@ function AppContent() {
         setCurrentView={setCurrentView}
         cartCount={cartCount}
         setShowCart={setShowCart}
+        unreadNotifs={unreadNotifs}
       />
       {currentView === 'home' && (
         <HomePage setCurrentView={setCurrentView} setSelectedCategory={setSelectedCategory} />
@@ -120,10 +150,11 @@ function AppContent() {
           onAddToCart={handleAddToCart}
         />
       )}
-      {currentView === 'map' && <MapPage setCurrentView={setCurrentView} />}
-      {currentView === 'farms' && <FarmsPage setCurrentView={setCurrentView} />}
+      {currentView === 'map'           && <MapPage           setCurrentView={setCurrentView} />}
+      {currentView === 'farms'         && <FarmsPage         setCurrentView={setCurrentView} />}
+      {currentView === 'notifications' && <NotificationsPage setCurrentView={setCurrentView} />}
       {currentView === 'producer-dashboard' && <ProducerDashboard setCurrentView={setCurrentView} />}
-      {currentView === 'buyer-dashboard' && <BuyerDashboard setCurrentView={setCurrentView} />}
+      {currentView === 'buyer-dashboard'    && <BuyerDashboard    setCurrentView={setCurrentView} />}
       <CartSidebar
         isOpen={showCart}
         onClose={() => setShowCart(false)}
