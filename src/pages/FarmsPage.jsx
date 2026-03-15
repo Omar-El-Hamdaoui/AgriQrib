@@ -1,4 +1,3 @@
-// pages/FarmsPage.jsx
 import { useState } from 'react';
 import { mockFarms } from '../data/mockData';
 import { Icons } from '../components/ui/Icons';

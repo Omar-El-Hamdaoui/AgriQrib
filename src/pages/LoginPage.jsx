@@ -1,20 +1,16 @@
-// pages/LoginPage.jsx
-// Connexion + mot de passe oublié via Supabase natif
 
 import { useState } from 'react';
-import { Icons }        from '../components/ui/Icons';
+import { Icons } from '../components/ui/Icons';
 import { Button, Card } from '../components/ui/primitives';
-import { useLogin }     from '../auth/useLogin';
-import { supabase }     from '../auth/supabaseClient';
+import { useLogin } from '../auth/useLogin';
+import { supabase } from '../auth/supabaseClient';
 
 const FieldError = ({ msg }) =>
   msg ? <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">⚠ {msg}</p> : null;
-
-// ── Formulaire "Mot de passe oublié" ─────────────────────────────────────────
 const ForgotPasswordForm = ({ onBack }) => {
-  const [email,  setEmail]  = useState('');
+  const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle | loading | sent
-  const [error,  setError]  = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -23,13 +19,9 @@ const ForgotPasswordForm = ({ onBack }) => {
     }
     setError('');
     setStatus('loading');
-
-    // Supabase envoie l'email nativement — ne révèle pas si l'email existe
     await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-
-    // Toujours afficher "envoyé" quelle que soit la réponse
     setStatus('sent');
   };
 
@@ -103,11 +95,9 @@ const ForgotPasswordForm = ({ onBack }) => {
     </div>
   );
 };
-
-// ── Page principale ───────────────────────────────────────────────────────────
 export const LoginPage = ({ setCurrentView, onLoggedIn }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgot,   setShowForgot]   = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   const { data, errors, loading, setField, submit } = useLogin({
     onSuccess: (user) => onLoggedIn?.(user),
@@ -230,9 +220,9 @@ export const LoginPage = ({ setCurrentView, onLoggedIn }) => {
         {!showForgot && (
           <div className="mt-6 grid grid-cols-2 gap-3">
             {[
-              { icon: '👤', label: 'Particulier',  desc: 'Achetez en direct' },
-              { icon: '🍽️', label: 'Restaurant',   desc: 'Commandes en volume' },
-              { icon: '🌾', label: 'Producteur',   desc: 'Gérez vos récoltes' },
+              { icon: '👤', label: 'Particulier', desc: 'Achetez en direct' },
+              { icon: '🍽️', label: 'Restaurant', desc: 'Commandes en volume' },
+              { icon: '🌾', label: 'Producteur', desc: 'Gérez vos récoltes' },
               { icon: '🚛', label: 'Distributeur', desc: "Centrale d'achat" },
             ].map(r => (
               <div key={r.label} className="flex items-center gap-2 p-3 bg-white/60 rounded-xl border border-stone-200">

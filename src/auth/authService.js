@@ -1,16 +1,5 @@
-// auth/authService.js
-//
-// Toute la logique métier auth — remplace les endpoints FastAPI.
-//   register()       → POST /auth/register
-//   login()          → POST /auth/login
-//   logout()         → POST /auth/logout
-//   getMe()          → GET  /auth/me
-//   forgotPassword() → POST /auth/forgot-password
-//   resetPassword()  → POST /auth/reset-password
 
 import { supabase } from './supabaseClient'
-
-// ── Validation ────────────────────────────────────────────────────────────────
 
 const ALLOWED_ROLES = ['producer', 'buyer_individual', 'buyer_restaurant', 'buyer_transit']
 
@@ -25,8 +14,6 @@ function validateRole(role) {
         throw new Error(`Rôle invalide. Valeurs acceptées : ${ALLOWED_ROLES.join(', ')}`)
     }
 }
-
-// ── Helper : récupérer le profil complet ─────────────────────────────────────
 
 async function fetchProfile(uid) {
     const { data: profile, error } = await supabase
@@ -61,8 +48,6 @@ async function fetchProfile(uid) {
     }
 }
 
-// ── register ──────────────────────────────────────────────────────────────────
-
 export async function register(userData, farmData = null) {
     validatePassword(userData.password)
     validateRole(userData.role)
@@ -70,8 +55,6 @@ export async function register(userData, farmData = null) {
     if (userData.role === 'producer' && !farmData) {
         throw new Error("Les informations de la ferme sont requises pour un producteur.")
     }
-
-    // 1. Créer le compte Supabase Auth
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -85,8 +68,6 @@ export async function register(userData, farmData = null) {
     }
 
     const uid = authData.user.id
-
-    // 2. Insérer le profil dans `users`
     const { error: profileError } = await supabase.from('users').insert({
         id: uid,
         email: userData.email,
@@ -97,8 +78,6 @@ export async function register(userData, farmData = null) {
     })
 
     if (profileError) throw new Error(`Erreur création profil : ${profileError.message}`)
-
-    // 3. Insérer la ferme si producteur
     let farm = null
     if (userData.role === 'producer') {
         const { data: farmResult, error: farmError } = await supabase
@@ -135,21 +114,15 @@ export async function register(userData, farmData = null) {
     }
 }
 
-// ── login ─────────────────────────────────────────────────────────────────────
-
 export async function login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw new Error('Email ou mot de passe incorrect.')
     return fetchProfile(data.user.id)
 }
 
-// ── logout ────────────────────────────────────────────────────────────────────
-
 export async function logout() {
     await supabase.auth.signOut()
 }
-
-// ── getMe ─────────────────────────────────────────────────────────────────────
 
 export async function getMe() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -162,16 +135,9 @@ export async function getMe() {
     }
 }
 
-// ── forgotPassword ────────────────────────────────────────────────────────────
-
 export async function forgotPassword(email, redirectUrl = `${window.location.origin}/reset-password`) {
-    // Toujours résoudre — ne révèle pas si l'email existe
     await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl })
 }
-
-// ── resetPassword ─────────────────────────────────────────────────────────────
-// À appeler sur /reset-password après que Supabase a redirigé avec le token.
-// Le SDK gère automatiquement la session depuis l'URL.
 
 export async function resetPassword(newPassword) {
     validatePassword(newPassword)

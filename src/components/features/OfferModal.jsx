@@ -1,16 +1,15 @@
-// components/features/OfferModal.jsx
 import { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { Button } from '../ui/primitives';
 
 export const OfferModal = ({ product, onClose, onSubmit }) => {
-  const [quantity, setQuantity]         = useState(product.bulkDiscountThreshold || 10);
+  const [quantity, setQuantity] = useState(product.bulkDiscountThreshold || 10);
   const [pricePerUnit, setPricePerUnit] = useState(product.pricePerUnit * 0.85);
-  const [message, setMessage]           = useState('');
+  const [message, setMessage] = useState('');
 
-  const originalTotal  = quantity * product.pricePerUnit;
-  const proposedTotal  = quantity * pricePerUnit;
-  const savings        = originalTotal - proposedTotal;
+  const originalTotal = quantity * product.pricePerUnit;
+  const proposedTotal = quantity * pricePerUnit;
+  const savings = originalTotal - proposedTotal;
   const discountPercent = ((1 - pricePerUnit / product.pricePerUnit) * 100).toFixed(1);
 
   return (

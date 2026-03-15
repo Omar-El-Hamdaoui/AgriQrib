@@ -1,15 +1,11 @@
-// components/ui/primitives.jsx
-// Composants UI réutilisables : Badge, Button, Card, Input, Select
-
-// ── Badge ─────────────────────────────────────────────────
 export const Badge = ({ children, variant = 'default', className = '' }) => {
   const variants = {
     default: 'bg-stone-200 text-stone-700',
     success: 'bg-emerald-100 text-emerald-800',
     warning: 'bg-amber-100 text-amber-800',
-    danger:  'bg-red-100 text-red-800',
+    danger: 'bg-red-100 text-red-800',
     organic: 'bg-green-100 text-green-800 border border-green-300',
-    info:    'bg-sky-100 text-sky-800',
+    info: 'bg-sky-100 text-sky-800',
   };
 
   return (
@@ -21,8 +17,6 @@ export const Badge = ({ children, variant = 'default', className = '' }) => {
     </span>
   );
 };
-
-// ── Button ────────────────────────────────────────────────
 export const Button = ({
   children,
   variant = 'primary',
@@ -31,12 +25,12 @@ export const Button = ({
   ...props
 }) => {
   const variants = {
-    primary:   'bg-[#2D5016] hover:bg-[#1e3a0f] text-white shadow-md hover:shadow-lg',
+    primary: 'bg-[#2D5016] hover:bg-[#1e3a0f] text-white shadow-md hover:shadow-lg',
     secondary: 'bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300',
-    outline:   'border-2 border-[#2D5016] text-[#2D5016] hover:bg-[#2D5016] hover:text-white',
-    ghost:     'text-stone-600 hover:bg-stone-100',
-    danger:    'bg-red-600 hover:bg-red-700 text-white',
-    success:   'bg-emerald-600 hover:bg-emerald-700 text-white',
+    outline: 'border-2 border-[#2D5016] text-[#2D5016] hover:bg-[#2D5016] hover:text-white',
+    ghost: 'text-stone-600 hover:bg-stone-100',
+    danger: 'bg-red-600 hover:bg-red-700 text-white',
+    success: 'bg-emerald-600 hover:bg-emerald-700 text-white',
   };
 
   const sizes = {
@@ -55,8 +49,6 @@ export const Button = ({
     </button>
   );
 };
-
-// ── Card ──────────────────────────────────────────────────
 export const Card = ({ children, className = '', hover = false }) => (
   <div
     className={`bg-white rounded-2xl border border-stone-200 overflow-hidden
@@ -68,8 +60,6 @@ export const Card = ({ children, className = '', hover = false }) => (
     {children}
   </div>
 );
-
-// ── Input ─────────────────────────────────────────────────
 export const Input = ({ label, icon, className = '', ...props }) => (
   <div className={className}>
     {label && (
@@ -93,8 +83,6 @@ export const Input = ({ label, icon, className = '', ...props }) => (
     </div>
   </div>
 );
-
-// ── Select ────────────────────────────────────────────────
 export const Select = ({ label, options, className = '', ...props }) => (
   <div className={className}>
     {label && (

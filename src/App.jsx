@@ -1,4 +1,3 @@
-// App.jsx – Point d'entrée principal
 import { useState } from 'react';
 import './styles/global.css';
 
@@ -13,31 +12,21 @@ import { BuyerDashboard } from './pages/BuyerDashboard';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-
-// ── Détection de la vue initiale depuis l'URL ─────────────────────────────────
 function getInitialView() {
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const queryParams = new URLSearchParams(window.location.search);
-
-  // Token valide — legacy flow : #access_token=XXX&type=recovery
   if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
-    // ✅ Nettoyer le hash immédiatement — Supabase JS a déjà lu le token
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-  // Token valide — PKCE flow : ?code=XXX
   if (queryParams.get('code')) {
-    // ✅ Nettoyer le query string
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-  // Erreur Supabase dans le hash
   if (hashParams.get('error')) {
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-
-  // ✅ Nettoyer le hash résiduel (#) même si on va sur home
   if (window.location.hash) {
     window.history.replaceState(null, '', window.location.pathname);
   }
@@ -45,7 +34,6 @@ function getInitialView() {
   return 'home';
 }
 
-// ── Contenu principal ─────────────────────────────────────────────────────────
 function AppContent() {
   const { status } = useAuth();
 
@@ -76,7 +64,6 @@ function AppContent() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // reset-password rendu AVANT le spinner — le hash disparaît sinon
   if (currentView === 'reset-password') {
     return <ResetPasswordPage setCurrentView={setCurrentView} />;
   }

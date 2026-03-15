@@ -1,4 +1,3 @@
-// pages/ResetPasswordPage.jsx
 import { useState, useEffect } from 'react';
 import { Button, Card } from '../components/ui/primitives';
 import { supabase } from '../auth/supabaseClient';
@@ -41,8 +40,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
   const [showPass, setShowPass] = useState(false);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-
-  // ── Écouter l'événement PASSWORD_RECOVERY de Supabase ────────────────────
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
@@ -59,12 +56,9 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       clearTimeout(timeout);
     };
   }, []);
-
-  // ── Redirection automatique après succès ──────────────────────────────────
   useEffect(() => {
     if (pageStatus === 'success') {
       const timer = setTimeout(() => {
-        // Nettoyer le hash de l'URL avant de rediriger
         window.history.replaceState(null, '', window.location.pathname);
         setCurrentView('home');
       }, 1500);
@@ -89,22 +83,15 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
 
     setSaving(true);
     try {
-      // 1. Mettre à jour le mot de passe via Supabase
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         setErrors({ global: error.message ?? 'Une erreur est survenue.' });
         setSaving(false);
         return;
       }
-
-      // 2. Hydrater AuthContext avec le profil complet
       const result = await authApi.me();
       if (result) {
-        // AuthContext se met à jour via onAuthStateChange (USER_UPDATED)
-        // mais on force ici pour être sûr
       }
-
-      // 3. Afficher l'écran de succès → useEffect redirige automatiquement
       setPageStatus('success');
 
     } catch {
@@ -112,8 +99,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       setSaving(false);
     }
   };
-
-  // ── Écran d'attente ───────────────────────────────────────────────────────
   if (pageStatus === 'waiting') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4">
@@ -127,8 +112,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       </div>
     );
   }
-
-  // ── Écran d'erreur ────────────────────────────────────────────────────────
   if (pageStatus === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4">
@@ -150,8 +133,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       </div>
     );
   }
-
-  // ── Écran de succès ───────────────────────────────────────────────────────
   if (pageStatus === 'success') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4">
@@ -173,8 +154,6 @@ export const ResetPasswordPage = ({ setCurrentView }) => {
       </div>
     );
   }
-
-  // ── Formulaire ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f0e8] via-[#e8e0d4] to-[#d4cfc5] flex items-center justify-center p-4">
       <div className="w-full max-w-md">

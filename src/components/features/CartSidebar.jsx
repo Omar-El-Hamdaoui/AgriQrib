@@ -1,4 +1,3 @@
-// components/features/CartSidebar.jsx
 import { Icons } from '../ui/Icons';
 import { Button } from '../ui/primitives';
 

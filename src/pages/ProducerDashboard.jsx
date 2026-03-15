@@ -1,32 +1,31 @@
-// pages/ProducerDashboard.jsx
 import { useState } from 'react';
 import { mockOffers, mockOrders, mockProducts } from '../data/mockData';
-import { Icons }               from '../components/ui/Icons';
+import { Icons } from '../components/ui/Icons';
 import { Badge, Button, Card } from '../components/ui/primitives';
-import { useAuth }             from '../auth/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 
 export const ProducerDashboard = ({ setCurrentView }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const farm        = user?.farm;
+  const farm = user?.farm;
   const displayName = user ? `${user.firstName} ${user.lastName}` : '—';
-  const farmName    = farm?.farm_name ?? 'Ma ferme';
-  const initials    = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
+  const farmName = farm?.farm_name ?? 'Ma ferme';
+  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
 
   const stats = [
-    { label: 'Ventes du mois',     value: '2 450 DH', change: '+12%',        positive: true },
-    { label: 'Commandes en cours', value: '8',       change: '+3',          positive: true },
-    { label: 'Offres en attente',  value: '3',       change: '2 nouvelles', positive: false },
-    { label: 'Note moyenne',       value: '4.8',     change: '',            positive: true },
+    { label: 'Ventes du mois', value: '2 450 DH', change: '+12%', positive: true },
+    { label: 'Commandes en cours', value: '8', change: '+3', positive: true },
+    { label: 'Offres en attente', value: '3', change: '2 nouvelles', positive: false },
+    { label: 'Note moyenne', value: '4.8', change: '', positive: true },
   ];
 
   const tabs = [
-    { id: 'overview',  label: 'Aperçu',       icon: <Icons.BarChart /> },
-    { id: 'products',  label: 'Mes produits', icon: <Icons.Package /> },
-    { id: 'orders',    label: 'Commandes',    icon: <Icons.Truck /> },
-    { id: 'offers',    label: 'Offres',       icon: <Icons.Handshake /> },
-    { id: 'settings',  label: 'Paramètres',   icon: <Icons.Settings /> },
+    { id: 'overview', label: 'Aperçu', icon: <Icons.BarChart /> },
+    { id: 'products', label: 'Mes produits', icon: <Icons.Package /> },
+    { id: 'orders', label: 'Commandes', icon: <Icons.Truck /> },
+    { id: 'offers', label: 'Offres', icon: <Icons.Handshake /> },
+    { id: 'settings', label: 'Paramètres', icon: <Icons.Settings /> },
   ];
 
   return (

@@ -1,4 +1,3 @@
-// auth/useLogin.js
 import { useState } from 'react';
 import { parseApiError } from './authApi';
 import { useAuth } from './AuthContext';

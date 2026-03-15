@@ -175,7 +175,7 @@ async def register(payload: RegisterPayload, response: Response):
         supabase.table("users").insert({
             "id":         supabase_uid,   # même UUID que Supabase Auth
             "email":      user_data.email,
-            "role":       user_data.role,
+            "role":       ushttp://localhost:3000er_data.role,
             "first_name": user_data.first_name,
             "last_name":  user_data.last_name,
             "phone":      user_data.phone,

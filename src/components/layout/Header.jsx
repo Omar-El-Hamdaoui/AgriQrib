@@ -1,4 +1,3 @@
-// components/layout/Header.jsx
 import { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { useAuth } from '../../auth/AuthContext';

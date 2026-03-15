@@ -1,4 +1,3 @@
-// pages/HomePage.jsx
 import { mockCategories, mockProducts } from '../data/mockData';
 import { Icons } from '../components/ui/Icons';
 import { Button } from '../components/ui/primitives';
@@ -73,11 +72,11 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
             <div className="absolute -inset-4 bg-gradient-to-br from-[#2D5016]/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400" alt="Légumes frais"       className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
-                <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400" alt="Fromage artisanal"   className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400" alt="Légumes frais" className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400" alt="Fromage artisanal" className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="space-y-4 pt-8">
-                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400" alt="Agriculteur"        className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
+                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=400" alt="Agriculteur" className="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-500" />
               </div>
             </div>
           </div>
@@ -150,7 +149,7 @@ export const HomePage = ({ setCurrentView, setSelectedCategory }) => (
           {[
             { icon: '🔍', title: 'Parcourez', desc: 'Explorez les produits des fermes près de chez vous' },
             { icon: '🤝', title: 'Négociez', desc: 'Faites une offre pour les achats en volume' },
-            { icon: '🚚', title: 'Recevez',  desc: 'Retrait à la ferme ou livraison à domicile' },
+            { icon: '🚚', title: 'Recevez', desc: 'Retrait à la ferme ou livraison à domicile' },
           ].map((step, idx) => (
             <div key={idx} className="relative text-center p-8">
               {idx < 2 && (

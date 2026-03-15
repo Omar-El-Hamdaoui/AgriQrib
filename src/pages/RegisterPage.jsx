@@ -1,4 +1,3 @@
-// pages/RegisterPage.jsx
 import { useState } from 'react';
 import { Icons } from '../components/ui/Icons';
 import { Button, Card, Input } from '../components/ui/primitives';
@@ -11,10 +10,6 @@ import {
 
 const FieldError = ({ msg }) =>
   msg ? <p className="mt-1 text-xs text-red-600 flex items-center gap-1">⚠ {msg}</p> : null;
-
-// ── StepIndicator dynamique ───────────────────────────────────────────────────
-// visualStep : index visuel (0-based), sans les étapes sautées
-// total      : nombre d'étapes réelles selon le rôle
 const StepIndicator = ({ visualStep, total }) => (
   <div className="flex items-center gap-2 mb-8">
     {Array.from({ length: total }).map((_, idx) => (
@@ -331,8 +326,6 @@ const SuccessScreen = ({ data, setCurrentView }) => (
   </div>
 );
 
-// ── Composant principal ───────────────────────────────────────────────────────
-
 export const RegisterPage = ({ setCurrentView, onRegistered }) => {
   const {
     step, data, errors, loading, submitted,
@@ -344,8 +337,6 @@ export const RegisterPage = ({ setCurrentView, onRegistered }) => {
       setTimeout(() => onRegistered?.(response.user), 1500);
     },
   });
-
-  // Step visuel : CONFIRM est à l'index 3 pour non-producteur, 4 pour producteur
   const getVisualStep = () => {
     if (data.role !== 'producer' && step >= STEPS.CONFIRM) return step - 1;
     return step;
