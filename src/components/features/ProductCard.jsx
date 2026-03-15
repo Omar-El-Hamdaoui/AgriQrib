@@ -1,13 +1,12 @@
-// components/features/ProductCard.jsx
 import { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { Badge, Button, Card } from '../ui/primitives';
 import { OfferModal } from './OfferModal';
 
 export const ProductCard = ({ product, onAddToCart, onMakeOffer }) => {
-  const [quantity, setQuantity]         = useState(1);
+  const [quantity, setQuantity] = useState(1);
   const [showOfferModal, setShowOfferModal] = useState(false);
-  const [isFavorite, setIsFavorite]     = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   return (
     <>

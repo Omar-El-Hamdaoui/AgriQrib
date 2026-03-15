@@ -1,11 +1,5 @@
-// auth/authApi.js
-// Couche réseau : remplace les appels HTTP vers FastAPI par le SDK Supabase.
-// L'interface publique (authApi.register / login / logout / me) reste identique
-// pour ne pas casser useLogin, useRegister, AuthContext, etc.
 
 import { supabase } from './supabaseClient';
-
-// ── Helper : récupérer le profil complet depuis la DB ────────────────────────
 
 async function fetchProfile(uid) {
   const { data: profile, error } = await supabase
@@ -40,8 +34,6 @@ async function fetchProfile(uid) {
   };
 }
 
-// ── Endpoints d'authentification ──────────────────────────────────────────────
-
 export const authApi = {
 
   /**
@@ -50,7 +42,6 @@ export const authApi = {
    * Retourne : { user: UserProfile, farm?: FarmProfile }
    */
   register: async ({ user: userData, farm: farmData = null }) => {
-    // 1. Créer le compte Auth
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: userData.email,
       password: userData.password,
@@ -65,8 +56,6 @@ export const authApi = {
     }
 
     const uid = authData.user.id;
-
-    // 2. Insérer le profil dans `users`
     const { error: profileError } = await supabase.from('users').insert({
       id: uid,
       email: userData.email,
@@ -79,8 +68,6 @@ export const authApi = {
     if (profileError) {
       throw Object.assign(new Error(`Erreur création profil : ${profileError.message}`), { status: 500 });
     }
-
-    // 3. Insérer la ferme si producteur
     let farm = null;
     if (userData.role === 'producer') {
       if (!farmData) {
@@ -161,8 +148,6 @@ export const authApi = {
     }
   },
 };
-
-// ── Normalisation des erreurs pour l'UI ──────────────────────────────────────
 
 export const parseApiError = (error) => {
   const msg = error.message ?? '';

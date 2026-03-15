@@ -1,8 +1,3 @@
-// pages/MapPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Carte interactive : géolocalisation, annonces agricoles, enchères en temps réel
-// Dépendances : leaflet, react-leaflet  →  npm install leaflet react-leaflet
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip, Circle, useMap } from 'react-leaflet';
@@ -13,16 +8,12 @@ import { useAuth } from '../auth/AuthContext';
 import { ListingFormModal } from '../components/features/ListingFormModal';
 import { BidModal } from '../components/features/BidModal';
 import { ContactModal } from '../components/features/ContactModal';
-
-// ── Fix icônes Leaflet avec Vite/CRA ─────────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
-
-// ── Icônes personnalisées ─────────────────────────────────────────────────────
 const makeIcon = (emoji, color, size = 38) => L.divIcon({
   html: `
     <div style="
@@ -44,10 +35,10 @@ const makeIcon = (emoji, color, size = 38) => L.divIcon({
 });
 
 const ICONS = {
-  me:         makeIcon('📍', '#2D5016', 42),
-  active:     makeIcon('🌾', '#4a7c23', 38),
-  negotiating:makeIcon('🤝', '#d97706', 38),
-  agreed:     makeIcon('✅', '#6b7280', 32),
+  me: makeIcon('📍', '#2D5016', 42),
+  active: makeIcon('🌾', '#4a7c23', 38),
+  negotiating: makeIcon('🤝', '#d97706', 38),
+  agreed: makeIcon('✅', '#6b7280', 32),
 };
 
 const QUALITY_LABELS = {
@@ -61,8 +52,6 @@ const QUALITY_COLORS = {
 };
 
 const RADIUS_KM = 70;
-
-// ── Composant de recadrage de la carte ───────────────────────────────────────
 function FlyToUser({ coords }) {
   const map = useMap();
   useEffect(() => {
@@ -70,15 +59,11 @@ function FlyToUser({ coords }) {
   }, [coords, map]);
   return null;
 }
-
-// ── Exposer la ref Leaflet au composant parent ────────────────────────────────
 function SetMapRef({ mapRef }) {
   const map = useMap();
   useEffect(() => { mapRef.current = map; }, [map, mapRef]);
   return null;
 }
-
-// ── Filtres ───────────────────────────────────────────────────────────────────
 const DEFAULT_FILTERS = {
   product: '',
   maxDistance: RADIUS_KM,
@@ -87,14 +72,12 @@ const DEFAULT_FILTERS = {
   quality: '',
   status: 'all',
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
 export function MapPage({ setCurrentView }) {
   const { user } = useAuth();
-  const userRole    = user?.role ?? '';
-  const isProducer  = userRole === 'producer';
+  const userRole = user?.role ?? '';
+  const isProducer = userRole === 'producer';
   const isCollector = ['buyer_individual', 'buyer_restaurant', 'buyer_transit'].includes(userRole);
-  const isGuest     = !user; // visiteur non connecté
+  const isGuest = !user; // visiteur non connecté
 
   const [userCoords, setUserCoords] = useState(null);
   const [geoError, setGeoError] = useState(null);
@@ -115,26 +98,19 @@ export function MapPage({ setCurrentView }) {
   const realtimeRef = useRef(null);
   const [positionSource, setPositionSource] = useState('auto'); // 'auto' | 'db' | 'gps'
   const mapRef = useRef(null); // référence à l'instance Leaflet
-
-  // ── Écouter les événements de navigation depuis FarmsPage / CatalogPage ───
   useEffect(() => {
-    // Focus sur une ferme (depuis FarmsPage)
     const handleFocusFarm = (e) => {
       const { lat, lng } = e.detail;
       if (lat && lng && mapRef.current) {
         mapRef.current.flyTo([lat, lng], 13, { duration: 1.2 });
       }
     };
-
-    // Focus sur une annonce spécifique (ouvrir son panneau latéral)
     const handleFocusListing = (e) => {
       const listing = e.detail;
       if (!listing) return;
-      // Centrer sur l'annonce
       if (listing.latitude && listing.longitude && mapRef.current) {
         mapRef.current.flyTo([listing.latitude, listing.longitude], 14, { duration: 1.2 });
       }
-      // Ouvrir le panneau latéral
       setSelectedListing(listing);
       setShowSidePanel(true);
     };
@@ -146,16 +122,11 @@ export function MapPage({ setCurrentView }) {
       window.removeEventListener('map-focus-listing', handleFocusListing);
     };
   }, []);
-
-  // ── 1. Géolocalisation ───────────────────────────────────────────────────
-  // Connecté : base → GPS → fallback | Invité : GPS → fallback direct
   useEffect(() => {
     let cancelled = false;
 
     const init = async () => {
       setGeoLoading(true);
-
-      // 1a. Utilisateur connecté : chercher position sauvegardée en base
       if (user?.id) {
         const { data: savedLoc } = await supabase
           .from('user_locations')
@@ -172,8 +143,6 @@ export function MapPage({ setCurrentView }) {
           return;
         }
       }
-
-      // 1b. GPS navigateur (connecté sans position sauvegardée, ou invité)
       if (!navigator.geolocation) {
         setGeoError('Géolocalisation non supportée par votre navigateur.');
         setUserCoords([33.8935, -5.5547]);
@@ -189,8 +158,6 @@ export function MapPage({ setCurrentView }) {
           setUserCoords(coords);
           setPositionSource('gps');
           setGeoLoading(false);
-
-          // Sauvegarder en base seulement si connecté
           if (user?.id) {
             await supabase.from('user_locations').upsert({
               user_id: user.id,
@@ -214,8 +181,6 @@ export function MapPage({ setCurrentView }) {
     init();
     return () => { cancelled = true; };
   }, [user?.id]);
-
-  // ── 2. Charger les annonces proches ──────────────────────────────────────
   const fetchListings = useCallback(async () => {
     if (!userCoords) return;
     setListingsLoading(true);
@@ -229,40 +194,28 @@ export function MapPage({ setCurrentView }) {
       `)
       .in('status', ['active', 'negotiating', 'agreed'])
       .gte('available_until', new Date().toISOString().split('T')[0]);
-
-    // Filtre produit
     if (filters.product) {
       query = query.ilike('product_name', `%${filters.product}%`);
     }
-    // Filtre qualité
     if (filters.quality) {
       query = query.eq('quality_grade', filters.quality);
     }
-    // Filtre date disponibilité
     if (filters.availableFrom) {
       query = query.lte('available_from', filters.availableFrom);
     }
-    // Filtre quantité min
     if (filters.minQuantity) {
       query = query.gte('quantity_kg', parseFloat(filters.minQuantity));
     }
 
     const { data, error } = await query;
     if (error) { console.error(error); setListingsLoading(false); return; }
-
-    // Filtre distance côté client (haversine simplifié)
     const filtered = (data || []).filter(l => {
       const dist = haversineKm(userCoords[0], userCoords[1], l.latitude, l.longitude);
       l._distanceKm = Math.round(dist * 10) / 10;
       return dist <= filters.maxDistance;
     });
-
-    // Tri par distance
     filtered.sort((a, b) => a._distanceKm - b._distanceKm);
     setListings(filtered);
-
-    // ── Sync selectedListing : si le panneau est ouvert, mettre à jour
-    // l'objet avec les données fraîches (nouveau statut, offer_count, etc.)
     setSelectedListing(prev => {
       if (!prev) return null;
       const fresh = filtered.find(l => l.id === prev.id);
@@ -273,18 +226,14 @@ export function MapPage({ setCurrentView }) {
   }, [userCoords, filters]);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
-
-  // ── 3. Realtime : écouter les nouvelles annonces et offres ───────────────
   useEffect(() => {
     if (!userCoords) return;
 
     const channel = supabase
       .channel('map-realtime')
-      // Toute modification d'une annonce (statut, offer_count, best_offer)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' },
         () => { fetchListings(); }
       )
-      // Nouvelle offre → recharger pour mettre à jour le panneau ouvert
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bids' },
         () => { fetchListings(); }
       )
@@ -296,8 +245,6 @@ export function MapPage({ setCurrentView }) {
     realtimeRef.current = channel;
     return () => supabase.removeChannel(channel);
   }, [userCoords, fetchListings]);
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
   const handleListingClick = (listing) => {
     setSelectedListing(listing);
     setShowSidePanel(true);
@@ -312,8 +259,6 @@ export function MapPage({ setCurrentView }) {
     setShowListingForm(false);
     fetchListings();
   };
-
-  // ── Rendu ─────────────────────────────────────────────────────────────────
   return (
     <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', background: '#f9f7f4' }}>
 
@@ -617,8 +562,6 @@ export function MapPage({ setCurrentView }) {
     </div>
   );
 }
-
-// ── Panneau latéral détail annonce ────────────────────────────────────────────
 function ListingSidePanel({ listing, isProducer, isCollector, isGuest, currentUserId, onClose, onBid, onContact, onLogin }) {
   const isOwner = listing.producer_id === currentUserId;
   const isWinner = listing.agreed_with_user_id === currentUserId;
@@ -626,9 +569,9 @@ function ListingSidePanel({ listing, isProducer, isCollector, isGuest, currentUs
   const qualColor = QUALITY_COLORS[listing.quality_grade] || '#6b7280';
 
   const statusConfig = {
-    active:      { label: 'Active',           bg: '#f0f7e6', color: '#2D5016' },
-    negotiating: { label: 'En négociation',   bg: '#fef3c7', color: '#92400e' },
-    agreed:      { label: 'Accord conclu',    bg: '#f0fdf4', color: '#166534' },
+    active: { label: 'Active', bg: '#f0f7e6', color: '#2D5016' },
+    negotiating: { label: 'En négociation', bg: '#fef3c7', color: '#92400e' },
+    agreed: { label: 'Accord conclu', bg: '#f0fdf4', color: '#166534' },
   };
   const sc = statusConfig[listing.status] || statusConfig.active;
 
@@ -688,9 +631,9 @@ function ListingSidePanel({ listing, isProducer, isCollector, isGuest, currentUs
 
         {/* Grid infos clés */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <SidePanelChip icon="⚖️" label="Quantité"      value={`${listing.quantity_kg} kg`} />
-          <SidePanelChip icon="💰" label="Prix demandé"  value={`${listing.asking_price_per_unit} MAD/kg`} highlight />
-          <SidePanelChip icon="🌱" label="Récolte"       value={formatDate(listing.harvest_date)} />
+          <SidePanelChip icon="⚖️" label="Quantité" value={`${listing.quantity_kg} kg`} />
+          <SidePanelChip icon="💰" label="Prix demandé" value={`${listing.asking_price_per_unit} MAD/kg`} highlight />
+          <SidePanelChip icon="🌱" label="Récolte" value={formatDate(listing.harvest_date)} />
           <SidePanelChip icon="📅" label="Disponible dès" value={formatDate(listing.available_from)} />
         </div>
 
@@ -914,8 +857,6 @@ function FilterField({ label, children }) {
     </div>
   );
 }
-
-// ── Utilitaires ───────────────────────────────────────────────────────────────
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -935,35 +876,30 @@ const inputStyle = {
   fontSize: 13, outline: 'none',
 };
 
-// ── Composant de position fictive (dev uniquement) ────────────────────────────
-// Permet de simuler n'importe quelle position sans bouger physiquement.
-// Visible uniquement quand import.meta.env.DEV === true (npm run dev).
-
 const DEV_POSITIONS = [
   { label: '📍 Ma vraie position (GPS)', coords: null },
-  { label: '🇲🇦 Meknès centre',          coords: [33.8935, -5.5547] },
-  { label: '🌾 Aïn Taoujdate (Hassan)',   coords: [33.9300, 5.2200] },
-  { label: '🌿 Khemisset (Fatima)',       coords: [33.8200, 6.0700] },
-  { label: '🥔 El Hajeb (Youssef)',       coords: [33.6800, 5.3700] },
-  { label: '🛒 Collecteur Amine',         coords: [33.9100, 5.5100] },
-  { label: '🚛 Collecteur Karim',         coords: [33.8700, 5.6200] },
+  { label: '🇲🇦 Meknès centre', coords: [33.8935, -5.5547] },
+  { label: '🌾 Aïn Taoujdate (Hassan)', coords: [33.9300, 5.2200] },
+  { label: '🌿 Khemisset (Fatima)', coords: [33.8200, 6.0700] },
+  { label: '🥔 El Hajeb (Youssef)', coords: [33.6800, 5.3700] },
+  { label: '🛒 Collecteur Amine', coords: [33.9100, 5.5100] },
+  { label: '🚛 Collecteur Karim', coords: [33.8700, 5.6200] },
 ];
 
 function PositionOverride({ currentCoords, positionSource, onOverride }) {
   const [open, setOpen] = useState(false);
 
   const sourceLabel = {
-    db:       '💾 base',
-    gps:      '📡 GPS',
-    manual:   '🎯 fictive',
+    db: '💾 base',
+    gps: '📡 GPS',
+    manual: '🎯 fictive',
     fallback: '⚠️ fallback',
-    auto:     '…',
+    auto: '…',
   }[positionSource] || '…';
 
   const handleSelect = async (pos) => {
     setOpen(false);
     if (pos.coords === null) {
-      // Redemander le vrai GPS
       navigator.geolocation.getCurrentPosition(
         (p) => onOverride([p.coords.latitude, p.coords.longitude]),
         () => alert('GPS non disponible')

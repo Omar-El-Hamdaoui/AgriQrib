@@ -1,5 +1,3 @@
-// components/ui/Icons.jsx
-// Tous les SVG icons de l'application
 
 export const Icons = {
   Search: () => (

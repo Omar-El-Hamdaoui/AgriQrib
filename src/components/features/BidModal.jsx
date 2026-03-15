@@ -1,14 +1,8 @@
-// components/features/BidModal.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Modal d'enchères : collecteurs soumettent des offres, producteur les gère
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../auth/supabaseClient';
 import { useAuth } from '../../auth/AuthContext';
 import { ModalOverlay } from './ListingFormModal';
-
-// ─────────────────────────────────────────────────────────────────────────────
 export function BidModal({ listing, onClose, onSubmitted }) {
   const { user } = useAuth();
   const isProducer = listing.producer_id === user.id;
@@ -24,8 +18,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // Charger les offres
   const fetchBids = useCallback(async () => {
     setLoadingBids(true);
     let query = supabase
@@ -36,8 +28,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
       `)
       .eq('listing_id', listing.id)
       .order('price_per_unit', { ascending: false });
-
-    // Le producteur voit toutes les offres, le collecteur seulement la sienne
     if (isCollector) {
       query = query.eq('bidder_id', user.id);
     }
@@ -56,8 +46,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
   }, [listing.id, isCollector, user.id]);
 
   useEffect(() => { fetchBids(); }, [fetchBids]);
-
-  // Realtime : mise à jour en temps réel
   useEffect(() => {
     const channel = supabase
       .channel(`bids-${listing.id}`)
@@ -69,8 +57,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
 
     return () => supabase.removeChannel(channel);
   }, [listing.id, fetchBids]);
-
-  // ── Soumettre une offre (collecteur) ─────────────────────────────────────
   const handleSubmitBid = async () => {
     setError(''); setSuccess('');
     if (!offerPrice || parseFloat(offerPrice) <= 0) {
@@ -95,8 +81,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
         .eq('id', myBid.id));
     } else {
       ({ error: err } = await supabase.from('bids').insert(payload));
-
-      // BUG 1 FIX : passer le statut à 'negotiating' dès la première offre
       if (!err) {
         await supabase
           .from('listings')
@@ -119,20 +103,14 @@ export function BidModal({ listing, onClose, onSubmitted }) {
       setTimeout(() => { onSubmitted(); }, 1500);
     }
   };
-
-  // ── Accepter une offre (producteur) ──────────────────────────────────────
   const handleAcceptBid = async (bid) => {
     setSubmitting(true);
-
-    // 1. Marquer l'offre comme acceptée et gagnante
     const { error: e1 } = await supabase
       .from('bids')
       .update({ is_accepted: true, is_winning: true })
       .eq('id', bid.id);
 
     if (e1) { setError(e1.message); setSubmitting(false); return; }
-
-    // 2. Mettre à jour l'annonce
     const { error: e2 } = await supabase
       .from('listings')
       .update({
@@ -145,8 +123,6 @@ export function BidModal({ listing, onClose, onSubmitted }) {
       .eq('id', listing.id);
 
     if (e2) { setError(e2.message); setSubmitting(false); return; }
-
-    // 3. Créer l'entrée unlocked_contacts (upsert pour éviter les doublons)
     const { error: e3 } = await supabase
       .from('unlocked_contacts')
       .upsert({
@@ -157,37 +133,31 @@ export function BidModal({ listing, onClose, onSubmitted }) {
       }, { onConflict: 'listing_id' });
 
     if (e3) { setError(e3.message); setSubmitting(false); return; }
-
-    // 4. Marquer toutes les autres offres comme perdantes
     await supabase
       .from('bids')
       .update({ is_winning: false, is_accepted: false })
       .eq('listing_id', listing.id)
       .neq('id', bid.id);
-
-    // 5. Notifier les deux parties : contact débloqué
     await supabase.from('notifications').insert([
       {
-        user_id:    listing.producer_id,
-        type:       'contact_unlocked',
-        title:      '🔓 Nouveau contact débloqué',
-        body:       `Vous avez conclu un accord sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg. Les coordonnées de votre collecteur sont maintenant disponibles.`,
+        user_id: listing.producer_id,
+        type: 'contact_unlocked',
+        title: '🔓 Nouveau contact débloqué',
+        body: `Vous avez conclu un accord sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg. Les coordonnées de votre collecteur sont maintenant disponibles.`,
         listing_id: listing.id,
-        bid_id:     bid.id,
+        bid_id: bid.id,
       },
       {
-        user_id:    bid.bidder_id,
-        type:       'contact_unlocked',
-        title:      '🔓 Nouveau contact débloqué',
-        body:       `Votre offre sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg a été acceptée. Les coordonnées du producteur sont maintenant disponibles.`,
+        user_id: bid.bidder_id,
+        type: 'contact_unlocked',
+        title: '🔓 Nouveau contact débloqué',
+        body: `Votre offre sur "${listing.product_name}" à ${bid.price_per_unit} MAD/kg a été acceptée. Les coordonnées du producteur sont maintenant disponibles.`,
         listing_id: listing.id,
-        bid_id:     bid.id,
+        bid_id: bid.id,
       },
     ]);
 
     setSubmitting(false);
-
-    // BUG 2 FIX : recharger les offres pour griser les boutons, puis fermer
     await fetchBids();
     setSuccess('Accord conclu ! Les coordonnées sont maintenant débloquées.');
     setTimeout(() => { onSubmitted(); }, 1800);
@@ -410,13 +380,11 @@ export function BidModal({ listing, onClose, onSubmitted }) {
   );
 }
 
-// ── Sous-composants ───────────────────────────────────────────────────────────
-
 function BidCard({ bid, rank, askingPrice, onAccept, accepting, isTop, isAgreed }) {
   const diff = (((bid.price_per_unit - askingPrice) / askingPrice) * 100).toFixed(1);
   const diffPositive = parseFloat(diff) >= 0;
   const isWinner = bid.is_accepted && bid.is_winning;
-  const isLoser  = isAgreed && !bid.is_accepted;
+  const isLoser = isAgreed && !bid.is_accepted;
 
   return (
     <div style={{
@@ -526,8 +494,6 @@ function FeedbackBox({ type, message }) {
     </div>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 const labelStyle = {
   display: 'block', fontSize: 12, fontWeight: 700, color: '#374151',
   marginBottom: 6, textTransform: 'uppercase',

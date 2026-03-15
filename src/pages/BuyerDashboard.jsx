@@ -1,14 +1,13 @@
-// pages/BuyerDashboard.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { supabase }  from '../auth/supabaseClient';
-import { useAuth }   from '../auth/AuthContext';
+import { supabase } from '../auth/supabaseClient';
+import { useAuth } from '../auth/AuthContext';
 
 const COMMISSION_RATE = 0.04; // 4%
 
 const ROLE_LABELS = {
   buyer_individual: 'Particulier',
   buyer_restaurant: 'Restaurant / Pro',
-  buyer_transit:    "Centrale d'achat",
+  buyer_transit: "Centrale d'achat",
 };
 
 function fmt(n) {
@@ -20,28 +19,22 @@ function fmtDate(d) {
 
 export const BuyerDashboard = ({ setCurrentView }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab]       = useState('overview');
-  const [purchases, setPurchases]       = useState([]);
-  const [activeBids, setActiveBids]     = useState([]);
-  const [loading, setLoading]           = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [purchases, setPurchases] = useState([]);
+  const [activeBids, setActiveBids] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const roleLabel   = ROLE_LABELS[user?.role] ?? 'Acheteur';
+  const roleLabel = ROLE_LABELS[user?.role] ?? 'Acheteur';
   const displayName = user ? `${user.firstName} ${user.lastName}` : '—';
-  const initials    = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
-
-  // Écouter le custom event du Header pour ouvrir directement l'onglet Paramètres
+  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
   useEffect(() => {
     const handler = (e) => setActiveTab(e.detail);
     window.addEventListener('dashboard-tab', handler);
     return () => window.removeEventListener('dashboard-tab', handler);
   }, []);
-
-  // ── Charger les données réelles ────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
-
-    // Achats conclus (annonces agreed avec ce collecteur)
     const { data: purchData } = await supabase
       .from('listings')
       .select(`
@@ -53,8 +46,6 @@ export const BuyerDashboard = ({ setCurrentView }) => {
       .eq('agreed_with_user_id', user.id)
       .eq('status', 'agreed')
       .order('agreed_at', { ascending: false });
-
-    // Offres en cours (bids actifs non acceptés)
     const { data: bidsData } = await supabase
       .from('bids')
       .select(`
@@ -73,11 +64,9 @@ export const BuyerDashboard = ({ setCurrentView }) => {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  // ── Stats calculées ────────────────────────────────────────────────────────
-  const totalAchats    = purchases.reduce((s, p) => s + (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0), 0);
+  const totalAchats = purchases.reduce((s, p) => s + (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0), 0);
   const totalCommission = totalAchats * COMMISSION_RATE;
-  const totalTTC       = totalAchats + totalCommission;
+  const totalTTC = totalAchats + totalCommission;
 
   const now = new Date();
   const purchThisMonth = purchases.filter(p => {
@@ -89,10 +78,10 @@ export const BuyerDashboard = ({ setCurrentView }) => {
   );
 
   const tabs = [
-    { id: 'overview',   label: 'Aperçu',        icon: '📊' },
-    { id: 'purchases',  label: 'Mes achats',     icon: '🛒' },
-    { id: 'bids',       label: 'Offres en cours', icon: '💬' },
-    { id: 'settings',   label: 'Paramètres',     icon: '⚙️' },
+    { id: 'overview', label: 'Aperçu', icon: '📊' },
+    { id: 'purchases', label: 'Mes achats', icon: '🛒' },
+    { id: 'bids', label: 'Offres en cours', icon: '💬' },
+    { id: 'settings', label: 'Paramètres', icon: '⚙️' },
   ];
 
   return (
@@ -176,7 +165,7 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                 <Empty icon="🛒" text="Aucun achat conclu pour l'instant" />
               ) : purchases.slice(0, 4).map(p => {
                 const montant = (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0);
-                const ttc     = montant * (1 + COMMISSION_RATE);
+                const ttc = montant * (1 + COMMISSION_RATE);
                 return (
                   <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                     <div>
@@ -205,7 +194,7 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                 <Empty icon="💬" text="Aucune offre en cours" />
               ) : activeBids.slice(0, 4).map(b => {
                 const listing = b.listings;
-                const isBest  = listing?.current_best_offer === b.price_per_unit;
+                const isBest = listing?.current_best_offer === b.price_per_unit;
                 return (
                   <div key={b.id} style={{ padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -248,13 +237,13 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                     ) : purchases.length === 0 ? (
                       <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Aucun achat</td></tr>
                     ) : purchases.map(p => {
-                      const ht   = (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0);
+                      const ht = (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0);
                       const comm = ht * COMMISSION_RATE;
-                      const ttc  = ht + comm;
+                      const ttc = ht + comm;
                       return (
                         <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ ...tdStyle, fontWeight: 700 }}>{p.product_name}</td>
-                          <td style={tdStyle}>{p.farms?.farm_name}<br/><span style={{ fontSize: 11, color: '#9ca3af' }}>{p.farms?.city}</span></td>
+                          <td style={tdStyle}>{p.farms?.farm_name}<br /><span style={{ fontSize: 11, color: '#9ca3af' }}>{p.farms?.city}</span></td>
                           <td style={tdStyle}>{p.quantity_kg} kg</td>
                           <td style={tdStyle}>{p.agreed_price_per_unit} MAD</td>
                           <td style={{ ...tdStyle, fontWeight: 700 }}>{fmt(ht)} MAD</td>
@@ -299,9 +288,9 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                   </thead>
                   <tbody>
                     {purchases.map((p, i) => {
-                      const ht   = (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0);
+                      const ht = (p.agreed_price_per_unit || 0) * (p.quantity_kg || 0);
                       const comm = ht * COMMISSION_RATE;
-                      const ttc  = ht + comm;
+                      const ttc = ht + comm;
                       return (
                         <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                           <td style={{ ...tdStyle, fontWeight: 700 }}>{p.product_name}</td>
@@ -312,7 +301,7 @@ export const BuyerDashboard = ({ setCurrentView }) => {
                               {p.users?.phone && <div style={{ color: '#6b7280' }}>{p.users.phone}</div>}
                             </div>
                           </td>
-                          <td style={tdStyle}>{p.farms?.farm_name}<br/><span style={{ fontSize: 11, color: '#9ca3af' }}>{p.farms?.city}</span></td>
+                          <td style={tdStyle}>{p.farms?.farm_name}<br /><span style={{ fontSize: 11, color: '#9ca3af' }}>{p.farms?.city}</span></td>
                           <td style={tdStyle}>{p.quantity_kg} kg</td>
                           <td style={tdStyle}>{p.agreed_price_per_unit} MAD</td>
                           <td style={{ ...tdStyle, fontWeight: 700 }}>{fmt(ht)} MAD</td>
@@ -347,8 +336,8 @@ export const BuyerDashboard = ({ setCurrentView }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {activeBids.map(b => {
                   const listing = b.listings;
-                  const isBest  = listing?.current_best_offer === b.price_per_unit;
-                  const diff    = listing?.asking_price_per_unit
+                  const isBest = listing?.current_best_offer === b.price_per_unit;
+                  const diff = listing?.asking_price_per_unit
                     ? (((b.price_per_unit - listing.asking_price_per_unit) / listing.asking_price_per_unit) * 100).toFixed(1)
                     : null;
                   return (
@@ -417,11 +406,11 @@ export const BuyerDashboard = ({ setCurrentView }) => {
           <DashCard title="Informations du compte" icon="⚙️">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 14 }}>
               {[
-                ['Prénom',    user?.firstName],
-                ['Nom',       user?.lastName],
-                ['Email',     user?.email],
+                ['Prénom', user?.firstName],
+                ['Nom', user?.lastName],
+                ['Email', user?.email],
                 ['Téléphone', user?.phone || '—'],
-                ['Rôle',      roleLabel],
+                ['Rôle', roleLabel],
               ].map(([label, val]) => (
                 <div key={label}>
                   <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
@@ -436,8 +425,6 @@ export const BuyerDashboard = ({ setCurrentView }) => {
     </div>
   );
 };
-
-// ── Sous-composants ───────────────────────────────────────────────────────────
 
 function StatCard({ icon, label, value, sub, color, highlight, negative }) {
   return (
@@ -478,12 +465,12 @@ function Empty({ icon, text }) {
 function Skeleton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {[1,2,3].map(i => (
+      {[1, 2, 3].map(i => (
         <div key={i} style={{ height: 48, background: '#f3f4f6', borderRadius: 8 }} />
       ))}
     </div>
   );
 }
 
-const tdStyle    = { padding: '10px 12px', color: '#374151', verticalAlign: 'middle' };
+const tdStyle = { padding: '10px 12px', color: '#374151', verticalAlign: 'middle' };
 const linkBtnStyle = { marginTop: 12, fontSize: 12, fontWeight: 700, color: '#1e40af', background: 'none', border: 'none', cursor: 'pointer', padding: 0 };

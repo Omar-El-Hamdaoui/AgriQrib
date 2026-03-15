@@ -1,4 +1,3 @@
-// auth/useRegister.js
 import { useState } from 'react';
 import {
   INITIAL_FORM_DATA,
@@ -19,14 +18,10 @@ export const useRegister = ({ onSuccess } = {}) => {
   const [submitted, setSubmitted] = useState(false);
 
   const totalSteps = getTotalSteps(data.role);
-
-  // ── Mise à jour d'un champ ────────────────────────────────────────────────
   const setField = (field, value) => {
     setData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
-
-  // ── Toggle certification ──────────────────────────────────────────────────
   const toggleCertification = (cert) => {
     setData(prev => ({
       ...prev,
@@ -35,14 +30,10 @@ export const useRegister = ({ onSuccess } = {}) => {
         : [...prev.certifications, cert],
     }));
   };
-
-  // ── Navigation ────────────────────────────────────────────────────────────
   const next = () => {
     const errs = validateStep(step, data);
     if (Object.keys(errs).length > 0) { setErrors(errs); return false; }
     setErrors({});
-
-    // Sauter l'étape FARM si l'utilisateur n'est pas producteur
     const nextStep = step + 1;
     if (nextStep === STEPS.FARM && data.role !== 'producer') {
       setStep(STEPS.CONFIRM);
@@ -55,15 +46,12 @@ export const useRegister = ({ onSuccess } = {}) => {
   const prev = () => {
     setErrors({});
     const prevStep = step - 1;
-    // Sauter l'étape FARM en arrière si non producteur
     if (prevStep === STEPS.FARM && data.role !== 'producer') {
       setStep(STEPS.PASSWORD);
     } else {
       setStep(prevStep);
     }
   };
-
-  // ── Soumission finale ─────────────────────────────────────────────────────
   const submit = async () => {
     const errs = validateStep(STEPS.CONFIRM, data);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
@@ -71,8 +59,6 @@ export const useRegister = ({ onSuccess } = {}) => {
     setLoading(true);
     try {
       const payload = buildPayload(data);
-
-      // ✅ register() du contexte : appelle authApi + setUser + setFarm
       const response = await register(payload.user, payload.farm ?? null);
 
       setSubmitted(true);
@@ -85,9 +71,6 @@ export const useRegister = ({ onSuccess } = {}) => {
       setLoading(false);
     }
   };
-
-  // ── Progression ───────────────────────────────────────────────────────────
-  // Calcule le step visuel en tenant compte des étapes sautées
   const getVisualStep = () => {
     if (data.role !== 'producer' && step >= STEPS.CONFIRM) {
       return step - 1; // CONFIRM est à l'index 3 pour un non-producteur

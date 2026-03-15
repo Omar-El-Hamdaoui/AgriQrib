@@ -1,8 +1,3 @@
-// pages/CatalogPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Catalogue des produits disponibles (annonces actives + négociation)
-// avec filtres et navigation vers l'offre exacte sur la carte
-// ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../auth/supabaseClient';
 
@@ -16,12 +11,12 @@ const QUALITY_COLORS = {
 };
 
 const CATEGORIES = [
-  { id: 'all',        label: '🌿 Tous',          match: null },
-  { id: 'legumes',    label: '🥕 Légumes',        match: ['tomate', 'carotte', 'oignon', 'pomme de terre', 'courgette', 'poivron', 'aubergine', 'haricot', 'salade', 'épinard', 'navet', 'brocoli', 'chou', 'ail', 'poireau'] },
-  { id: 'fruits',     label: '🍎 Fruits',          match: ['pomme', 'poire', 'figue', 'grenade', 'raisin', 'orange', 'citron', 'abricot', 'pêche', 'cerise', 'fraise', 'pastèque', 'melon', 'mandarine', 'datte', 'banane'] },
-  { id: 'olives',     label: '🫒 Olives & huile',  match: ['olive', 'huile'] },
-  { id: 'cereales',   label: '🌾 Céréales',        match: ['blé', 'orge', 'maïs', 'sorgho', 'avoine'] },
-  { id: 'aromatiques',label: '🌱 Aromatiques',     match: ['menthe', 'persil', 'coriandre', 'thym', 'romarin', 'basilic', 'lavande'] },
+  { id: 'all', label: '🌿 Tous', match: null },
+  { id: 'legumes', label: '🥕 Légumes', match: ['tomate', 'carotte', 'oignon', 'pomme de terre', 'courgette', 'poivron', 'aubergine', 'haricot', 'salade', 'épinard', 'navet', 'brocoli', 'chou', 'ail', 'poireau'] },
+  { id: 'fruits', label: '🍎 Fruits', match: ['pomme', 'poire', 'figue', 'grenade', 'raisin', 'orange', 'citron', 'abricot', 'pêche', 'cerise', 'fraise', 'pastèque', 'melon', 'mandarine', 'datte', 'banane'] },
+  { id: 'olives', label: '🫒 Olives & huile', match: ['olive', 'huile'] },
+  { id: 'cereales', label: '🌾 Céréales', match: ['blé', 'orge', 'maïs', 'sorgho', 'avoine'] },
+  { id: 'aromatiques', label: '🌱 Aromatiques', match: ['menthe', 'persil', 'coriandre', 'thym', 'romarin', 'basilic', 'lavande'] },
 ];
 
 function matchCategory(productName, match) {
@@ -33,21 +28,17 @@ function matchCategory(productName, match) {
 function fmtDate(d) {
   return d ? new Date(d).toLocaleDateString('fr-MA', { day: '2-digit', month: 'short' }) : '—';
 }
-
-// ── Composant principal ───────────────────────────────────────────────────────
 export const CatalogPage = ({ setCurrentView }) => {
-  const [listings, setListings]       = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [search, setSearch]           = useState('');
-  const [category, setCategory]       = useState('all');
-  const [qualityFilter, setQuality]   = useState('');
-  const [sortBy, setSortBy]           = useState('recent');
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [qualityFilter, setQuality] = useState('');
+  const [sortBy, setSortBy] = useState('recent');
   const [showFilters, setShowFilters] = useState(false);
-  const [minQty, setMinQty]           = useState('');
-  const [maxPrice, setMaxPrice]       = useState('');
-  const [statusFilter, setStatus]     = useState('all'); // 'all' | 'active' | 'negotiating'
-
-  // ── Charger toutes les annonces actives ────────────────────────────────────
+  const [minQty, setMinQty] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [statusFilter, setStatus] = useState('all'); // 'all' | 'active' | 'negotiating'
   const fetchListings = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
@@ -69,14 +60,12 @@ export const CatalogPage = ({ setCurrentView }) => {
   }, []);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
-
-  // ── Filtrage + tri ─────────────────────────────────────────────────────────
   const catObj = CATEGORIES.find(c => c.id === category);
 
   let filtered = listings.filter(l => {
     if (search && !l.product_name.toLowerCase().includes(search.toLowerCase()) &&
-        !l.farms?.farm_name?.toLowerCase().includes(search.toLowerCase()) &&
-        !l.farms?.city?.toLowerCase().includes(search.toLowerCase())) return false;
+      !l.farms?.farm_name?.toLowerCase().includes(search.toLowerCase()) &&
+      !l.farms?.city?.toLowerCase().includes(search.toLowerCase())) return false;
     if (category !== 'all' && !matchCategory(l.product_name, catObj?.match)) return false;
     if (qualityFilter && l.quality_grade !== qualityFilter) return false;
     if (statusFilter !== 'all' && l.status !== statusFilter) return false;
@@ -85,12 +74,10 @@ export const CatalogPage = ({ setCurrentView }) => {
     return true;
   });
 
-  if (sortBy === 'price_asc')  filtered = [...filtered].sort((a, b) => a.asking_price_per_unit - b.asking_price_per_unit);
+  if (sortBy === 'price_asc') filtered = [...filtered].sort((a, b) => a.asking_price_per_unit - b.asking_price_per_unit);
   if (sortBy === 'price_desc') filtered = [...filtered].sort((a, b) => b.asking_price_per_unit - a.asking_price_per_unit);
-  if (sortBy === 'qty_desc')   filtered = [...filtered].sort((a, b) => b.quantity_kg - a.quantity_kg);
-  if (sortBy === 'offers')     filtered = [...filtered].sort((a, b) => (b.offer_count || 0) - (a.offer_count || 0));
-
-  // ── Naviguer vers l'annonce exacte sur la carte ───────────────────────────
+  if (sortBy === 'qty_desc') filtered = [...filtered].sort((a, b) => b.quantity_kg - a.quantity_kg);
+  if (sortBy === 'offers') filtered = [...filtered].sort((a, b) => (b.offer_count || 0) - (a.offer_count || 0));
   const goToListingOnMap = (listing) => {
     setCurrentView('map');
     setTimeout(() => {
@@ -227,8 +214,6 @@ export const CatalogPage = ({ setCurrentView }) => {
     </div>
   );
 };
-
-// ── Carte produit ─────────────────────────────────────────────────────────────
 function ProductCard({ listing, onGoToMap }) {
   const qualColor = QUALITY_COLORS[listing.quality_grade] || '#6b7280';
   const isNegotiating = listing.status === 'negotiating';
@@ -381,7 +366,7 @@ function EmptyState() {
 function ProductSkeletons() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-      {[1,2,3,4,5,6].map(i => (
+      {[1, 2, 3, 4, 5, 6].map(i => (
         <div key={i} style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
           <div style={{ height: 80, background: 'linear-gradient(135deg, #e5e7eb, #f3f4f6)' }} />
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>

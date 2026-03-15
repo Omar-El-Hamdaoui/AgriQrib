@@ -1,31 +1,23 @@
-// pages/NotificationsPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Page notifications + carnet de contacts débloqués
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../auth/supabaseClient';
 import { useAuth } from '../auth/AuthContext';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60)   return 'À l\'instant';
+  if (diff < 60) return 'À l\'instant';
   if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
   if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
   return `Il y a ${Math.floor(diff / 86400)} j`;
 }
 
 const NOTIF_STYLES = {
-  new_bid:          { bg: '#eff6ff', border: '#bfdbfe', dot: '#3b82f6', icon: '💬' },
-  bid_updated:      { bg: '#fefce8', border: '#fef08a', dot: '#eab308', icon: '✏️' },
-  bid_accepted:     { bg: '#f0fdf4', border: '#bbf7d0', dot: '#22c55e', icon: '🎉' },
-  bid_rejected:     { bg: '#fef2f2', border: '#fecaca', dot: '#ef4444', icon: '❌' },
-  deal_agreed:      { bg: '#f0fdf4', border: '#bbf7d0', dot: '#22c55e', icon: '✅' },
+  new_bid: { bg: '#eff6ff', border: '#bfdbfe', dot: '#3b82f6', icon: '💬' },
+  bid_updated: { bg: '#fefce8', border: '#fef08a', dot: '#eab308', icon: '✏️' },
+  bid_accepted: { bg: '#f0fdf4', border: '#bbf7d0', dot: '#22c55e', icon: '🎉' },
+  bid_rejected: { bg: '#fef2f2', border: '#fecaca', dot: '#ef4444', icon: '❌' },
+  deal_agreed: { bg: '#f0fdf4', border: '#bbf7d0', dot: '#22c55e', icon: '✅' },
   contact_unlocked: { bg: '#faf5ff', border: '#e9d5ff', dot: '#a855f7', icon: '🔓' },
 };
-
-// ── Composant principal ───────────────────────────────────────────────────────
 export function NotificationsPage({ setCurrentView }) {
   const { user } = useAuth();
   const [tab, setTab] = useState('notifications'); // 'notifications' | 'contacts'
@@ -36,8 +28,6 @@ export function NotificationsPage({ setCurrentView }) {
 
   const [contacts, setContacts] = useState([]);
   const [contactsLoading, setContactsLoading] = useState(true);
-
-  // ── Charger les notifications ─────────────────────────────────────────────
   const fetchNotifications = useCallback(async () => {
     setNotifsLoading(true);
     const { data } = await supabase
@@ -52,8 +42,6 @@ export function NotificationsPage({ setCurrentView }) {
     setUnreadCount(list.filter(n => !n.is_read).length);
     setNotifsLoading(false);
   }, [user.id]);
-
-  // ── Charger les contacts débloqués ────────────────────────────────────────
   const fetchContacts = useCallback(async () => {
     setContactsLoading(true);
 
@@ -71,7 +59,7 @@ export function NotificationsPage({ setCurrentView }) {
     ]);
 
     const combined = [
-      ...(asProducer  || []).map(uc => ({ ...uc, isProducer: true  })),
+      ...(asProducer || []).map(uc => ({ ...uc, isProducer: true })),
       ...(asCollector || []).map(uc => ({ ...uc, isProducer: false })),
     ];
 
@@ -92,8 +80,6 @@ export function NotificationsPage({ setCurrentView }) {
   }, [user.id]);
 
   useEffect(() => { fetchNotifications(); fetchContacts(); }, [fetchNotifications, fetchContacts]);
-
-  // ── Realtime : nouvelles notifications ───────────────────────────────────
   useEffect(() => {
     const channel = supabase
       .channel(`notifs-${user.id}`)
@@ -105,8 +91,6 @@ export function NotificationsPage({ setCurrentView }) {
 
     return () => supabase.removeChannel(channel);
   }, [user.id, fetchNotifications]);
-
-  // ── Marquer toutes comme lues ─────────────────────────────────────────────
   const markAllRead = async () => {
     await supabase
       .from('notifications')
@@ -115,15 +99,11 @@ export function NotificationsPage({ setCurrentView }) {
       .eq('is_read', false);
     fetchNotifications();
   };
-
-  // ── Marquer une notif comme lue ───────────────────────────────────────────
   const markRead = async (id) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
   };
-
-  // ── Supprimer une notification ────────────────────────────────────────────
   const deleteNotif = async (id) => {
     await supabase.from('notifications').delete().eq('id', id);
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -169,7 +149,7 @@ export function NotificationsPage({ setCurrentView }) {
           <div style={{ display: 'flex', gap: 4, marginTop: 20 }}>
             {[
               { key: 'notifications', label: '🔔 Notifications', badge: unreadCount },
-              { key: 'contacts',      label: '📋 Contacts débloqués', badge: contacts.length },
+              { key: 'contacts', label: '📋 Contacts débloqués', badge: contacts.length },
             ].map(({ key, label, badge }) => (
               <button
                 key={key}
@@ -281,8 +261,6 @@ export function NotificationsPage({ setCurrentView }) {
     </div>
   );
 }
-
-// ── Carte notification ────────────────────────────────────────────────────────
 function NotifCard({ notif, onRead, onDelete, onGoToMap }) {
   const style = NOTIF_STYLES[notif.type] || NOTIF_STYLES.new_bid;
   const [hovered, setHovered] = useState(false);
@@ -369,8 +347,6 @@ function NotifCard({ notif, onRead, onDelete, onGoToMap }) {
     </div>
   );
 }
-
-// ── Carte contact débloqué ────────────────────────────────────────────────────
 function ContactCard({ uc }) {
   const [copied, setCopied] = useState(null);
   const { other, isProducer, listing } = uc;
@@ -378,7 +354,7 @@ function ContactCard({ uc }) {
   if (!other) return null;
 
   const roleLabel = isProducer ? 'Collecteur' : 'Producteur';
-  const roleIcon  = isProducer ? '🚚' : '🌾';
+  const roleIcon = isProducer ? '🚚' : '🌾';
 
   const copy = (text, field) => {
     navigator.clipboard.writeText(text);
@@ -475,8 +451,6 @@ function ContactCard({ uc }) {
     </div>
   );
 }
-
-// ── Ligne de contact ──────────────────────────────────────────────────────────
 function ContactRow({ icon, label, value, href, onCopy, copied }) {
   return (
     <div style={{
@@ -517,8 +491,6 @@ function ContactRow({ icon, label, value, href, onCopy, copied }) {
     </div>
   );
 }
-
-// ── Empty state ───────────────────────────────────────────────────────────────
 function EmptyState({ icon, title, body }) {
   return (
     <div style={{
@@ -532,8 +504,6 @@ function EmptyState({ icon, title, body }) {
     </div>
   );
 }
-
-// ── Skeleton loader ───────────────────────────────────────────────────────────
 function NotifSkeleton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

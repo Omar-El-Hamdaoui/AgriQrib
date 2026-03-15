@@ -1,7 +1,3 @@
-// pages/FarmsPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Liste des fermes réelles depuis Supabase, avec navigation vers la carte
-// ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../auth/supabaseClient';
 
@@ -14,16 +10,12 @@ const QUALITY_COLORS = {
   standard: '#6b7280', premium: '#0ea5e9', bio: '#16a34a',
   bio_premium: '#15803d', label_rouge: '#dc2626', aop: '#9333ea', igp: '#ea580c',
 };
-
-// ── Composant principal ───────────────────────────────────────────────────────
 export const FarmsPage = ({ setCurrentView }) => {
-  const [farms, setFarms]           = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');
+  const [farms, setFarms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [expandedFarm, setExpandedFarm] = useState(null); // farm_id dont on voit les produits
-
-  // ── Charger fermes + leurs annonces actives ────────────────────────────────
   const fetchFarms = useCallback(async () => {
     setLoading(true);
 
@@ -39,8 +31,6 @@ export const FarmsPage = ({ setCurrentView }) => {
         )
       `)
       .order('rating', { ascending: false });
-
-    // Ne garder que les fermes avec au moins une annonce active ou en négociation
     const enriched = (data || []).map(farm => ({
       ...farm,
       activeListings: (farm.listings || []).filter(l =>
@@ -53,8 +43,6 @@ export const FarmsPage = ({ setCurrentView }) => {
   }, []);
 
   useEffect(() => { fetchFarms(); }, [fetchFarms]);
-
-  // ── Filtrage ───────────────────────────────────────────────────────────────
   const cities = [...new Set(farms.map(f => f.city).filter(Boolean))].sort();
 
   const filtered = farms.filter(f => {
@@ -64,16 +52,16 @@ export const FarmsPage = ({ setCurrentView }) => {
     const matchCity = !cityFilter || f.city === cityFilter;
     return matchSearch && matchCity;
   });
-
-  // ── Navigation vers la carte ───────────────────────────────────────────────
   const goToFarmOnMap = (farm) => {
     setCurrentView('map');
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('map-focus-farm', { detail: {
-        lat: farm.latitude,
-        lng: farm.longitude,
-        farmId: farm.id,
-      }}));
+      window.dispatchEvent(new CustomEvent('map-focus-farm', {
+        detail: {
+          lat: farm.latitude,
+          lng: farm.longitude,
+          farmId: farm.id,
+        }
+      }));
     }, 80);
   };
 
@@ -154,8 +142,6 @@ export const FarmsPage = ({ setCurrentView }) => {
     </div>
   );
 };
-
-// ── Carte ferme ───────────────────────────────────────────────────────────────
 function FarmCard({ farm, expanded, onToggleProducts, onGoToMap, onGoToListing }) {
   const owner = farm.users;
   const activeCount = farm.activeListings?.length ?? 0;
@@ -289,8 +275,6 @@ function FarmCard({ farm, expanded, onToggleProducts, onGoToMap, onGoToListing }
     </div>
   );
 }
-
-// ── Mini-carte produit dans la ferme ──────────────────────────────────────────
 function ListingMiniCard({ listing, onGoToMap }) {
   const qualColor = QUALITY_COLORS[listing.quality_grade] || '#6b7280';
   return (
@@ -345,7 +329,7 @@ function EmptyState({ icon, title, body }) {
 function FarmsSkeletons() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-      {[1,2,3,4,5,6].map(i => (
+      {[1, 2, 3, 4, 5, 6].map(i => (
         <div key={i} style={{ background: 'white', borderRadius: 18, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
           <div style={{ height: 96, background: 'linear-gradient(135deg, #e5e7eb, #f3f4f6)' }} />
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>

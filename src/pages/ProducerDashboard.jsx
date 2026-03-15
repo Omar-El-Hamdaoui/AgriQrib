@@ -1,7 +1,6 @@
-// pages/ProducerDashboard.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { supabase }            from '../auth/supabaseClient';
-import { useAuth }             from '../auth/AuthContext';
+import { supabase } from '../auth/supabaseClient';
+import { useAuth } from '../auth/AuthContext';
 
 const COMMISSION_RATE = 0.02; // 2%
 
@@ -16,28 +15,22 @@ export const ProducerDashboard = ({ setCurrentView }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const [transactions, setTransactions]   = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [activeListings, setActiveListings] = useState([]);
-  const [loading, setLoading]             = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const farm        = user?.farm;
+  const farm = user?.farm;
   const displayName = user ? `${user.firstName} ${user.lastName}` : '—';
-  const farmName    = farm?.farm_name ?? 'Ma ferme';
-  const initials    = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
-
-  // Écouter le custom event du Header pour ouvrir directement l'onglet Paramètres
+  const farmName = farm?.farm_name ?? 'Ma ferme';
+  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
   useEffect(() => {
     const handler = (e) => setActiveTab(e.detail);
     window.addEventListener('dashboard-tab', handler);
     return () => window.removeEventListener('dashboard-tab', handler);
   }, []);
-
-  // ── Charger les données réelles ────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
-
-    // Transactions conclues (annonces agreed par ce producteur)
     const { data: txData } = await supabase
       .from('listings')
       .select(`
@@ -48,8 +41,6 @@ export const ProducerDashboard = ({ setCurrentView }) => {
       .eq('producer_id', user.id)
       .eq('status', 'agreed')
       .order('agreed_at', { ascending: false });
-
-    // Annonces actives / en négociation
     const { data: listData } = await supabase
       .from('listings')
       .select('id, product_name, quantity_kg, asking_price_per_unit, status, offer_count, current_best_offer, available_from')
@@ -63,15 +54,11 @@ export const ProducerDashboard = ({ setCurrentView }) => {
   }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  // ── Stats calculées ────────────────────────────────────────────────────────
   const totalBrut = transactions.reduce(
     (s, t) => s + (t.agreed_price_per_unit || 0) * (t.quantity_kg || 0), 0
   );
   const totalCommission = totalBrut * COMMISSION_RATE;
-  const totalNet        = totalBrut - totalCommission;
-
-  // Ce mois
+  const totalNet = totalBrut - totalCommission;
   const now = new Date();
   const txThisMonth = transactions.filter(t => {
     const d = new Date(t.agreed_at);
@@ -82,10 +69,10 @@ export const ProducerDashboard = ({ setCurrentView }) => {
   );
 
   const tabs = [
-    { id: 'overview',      label: 'Aperçu',          icon: '📊' },
-    { id: 'transactions',  label: 'Transactions',     icon: '💰' },
-    { id: 'listings',      label: 'Mes annonces',     icon: '🌾' },
-    { id: 'settings',      label: 'Paramètres',       icon: '⚙️' },
+    { id: 'overview', label: 'Aperçu', icon: '📊' },
+    { id: 'transactions', label: 'Transactions', icon: '💰' },
+    { id: 'listings', label: 'Mes annonces', icon: '🌾' },
+    { id: 'settings', label: 'Paramètres', icon: '⚙️' },
   ];
 
   return (
@@ -193,7 +180,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                 <Empty icon="💰" text="Aucune transaction conclue pour l'instant" />
               ) : transactions.slice(0, 4).map(tx => {
                 const montant = (tx.agreed_price_per_unit || 0) * (tx.quantity_kg || 0);
-                const net     = montant * (1 - COMMISSION_RATE);
+                const net = montant * (1 - COMMISSION_RATE);
                 return (
                   <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                     <div>
@@ -255,9 +242,9 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                     ) : transactions.length === 0 ? (
                       <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#9ca3af' }}>Aucune transaction</td></tr>
                     ) : transactions.map(tx => {
-                      const brut  = (tx.agreed_price_per_unit || 0) * (tx.quantity_kg || 0);
-                      const comm  = brut * COMMISSION_RATE;
-                      const net   = brut - comm;
+                      const brut = (tx.agreed_price_per_unit || 0) * (tx.quantity_kg || 0);
+                      const comm = brut * COMMISSION_RATE;
+                      const net = brut - comm;
                       return (
                         <tr key={tx.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={tdStyle}><span style={{ fontWeight: 700 }}>{tx.product_name}</span></td>
@@ -308,7 +295,7 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                     {transactions.map((tx, i) => {
                       const brut = (tx.agreed_price_per_unit || 0) * (tx.quantity_kg || 0);
                       const comm = brut * COMMISSION_RATE;
-                      const net  = brut - comm;
+                      const net = brut - comm;
                       return (
                         <tr key={tx.id} style={{ borderBottom: '1px solid #f3f4f6', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                           <td style={{ ...tdStyle, fontWeight: 700 }}>{tx.product_name}</td>
@@ -386,9 +373,9 @@ export const ProducerDashboard = ({ setCurrentView }) => {
           <DashCard title="Informations du compte" icon="⚙️">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 14 }}>
               {[
-                ['Prénom',    user?.firstName],
-                ['Nom',       user?.lastName],
-                ['Email',     user?.email],
+                ['Prénom', user?.firstName],
+                ['Nom', user?.lastName],
+                ['Email', user?.email],
                 ['Téléphone', user?.phone || '—'],
               ].map(([label, val]) => (
                 <div key={label}>
@@ -404,8 +391,8 @@ export const ProducerDashboard = ({ setCurrentView }) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 14 }}>
                     {[
                       ['Nom de la ferme', farm.farm_name],
-                      ['Ville',           farm.city],
-                      ['Adresse',         farm.address],
+                      ['Ville', farm.city],
+                      ['Adresse', farm.address],
                       ['Rayon livraison', `${farm.delivery_radius_km} km`],
                     ].map(([label, val]) => (
                       <div key={label}>
@@ -423,8 +410,6 @@ export const ProducerDashboard = ({ setCurrentView }) => {
     </div>
   );
 };
-
-// ── Sous-composants ───────────────────────────────────────────────────────────
 
 function StatCard({ icon, label, value, sub, color, highlight, negative }) {
   return (
@@ -455,9 +440,9 @@ function DashCard({ title, icon, children, style }) {
 
 function StatusPill({ status, offerCount }) {
   const cfg = {
-    active:      { bg: '#f0f7e6', color: '#2D5016', label: 'Active' },
+    active: { bg: '#f0f7e6', color: '#2D5016', label: 'Active' },
     negotiating: { bg: '#fef3c7', color: '#92400e', label: `Négociation · ${offerCount} offre${offerCount !== 1 ? 's' : ''}` },
-    agreed:      { bg: '#f0fdf4', color: '#166534', label: 'Accordé' },
+    agreed: { bg: '#f0fdf4', color: '#166534', label: 'Accordé' },
   };
   const s = cfg[status] || cfg.active;
   return (
@@ -479,7 +464,7 @@ function Empty({ icon, text }) {
 function Skeleton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {[1,2,3].map(i => (
+      {[1, 2, 3].map(i => (
         <div key={i} style={{ height: 48, background: '#f3f4f6', borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
       ))}
     </div>

@@ -1,4 +1,3 @@
-// App.jsx – Point d'entrée principal
 import { useState, useEffect } from 'react';
 import './styles/global.css';
 
@@ -16,39 +15,27 @@ import { BuyerDashboard } from './pages/BuyerDashboard';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-
-// ── Détection de la vue initiale depuis l'URL ─────────────────────────────────
 function getInitialView() {
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const queryParams = new URLSearchParams(window.location.search);
-
-  // Token valide — legacy flow : #access_token=XXX&type=recovery
   if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
-    // ✅ Nettoyer le hash immédiatement — Supabase JS a déjà lu le token
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-  // Token valide — PKCE flow : ?code=XXX
   if (queryParams.get('code')) {
-    // ✅ Nettoyer le query string
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-  // Erreur Supabase dans le hash
   if (hashParams.get('error')) {
     window.history.replaceState(null, '', window.location.pathname);
     return 'reset-password';
   }
-
-  // ✅ Nettoyer le hash résiduel (#) même si on va sur home
   if (window.location.hash) {
     window.history.replaceState(null, '', window.location.pathname);
   }
 
   return 'home';
 }
-
-// ── Contenu principal ─────────────────────────────────────────────────────────
 function AppContent() {
   const { user, status } = useAuth();
 
@@ -58,9 +45,7 @@ function AppContent() {
   const [showCart, setShowCart] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [featuredListings, setFeaturedListings] = useState([]);
-  const [featuredLoading, setFeaturedLoading]   = useState(true);
-
-  // Charger les 3 produits mis en avant (annonces actives les plus récentes)
+  const [featuredLoading, setFeaturedLoading] = useState(true);
   useEffect(() => {
     const fetchFeatured = async () => {
       setFeaturedLoading(true);
@@ -82,8 +67,6 @@ function AppContent() {
     };
     fetchFeatured();
   }, []);
-
-  // Charger + écouter le nombre de notifs non lues
   useEffect(() => {
     if (!user?.id) return;
 
@@ -118,8 +101,6 @@ function AppContent() {
   };
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  // reset-password rendu AVANT le spinner — le hash disparaît sinon
   if (currentView === 'reset-password') {
     return <ResetPasswordPage setCurrentView={setCurrentView} />;
   }
@@ -164,11 +145,11 @@ function AppContent() {
       {currentView === 'catalog' && (
         <CatalogPage setCurrentView={setCurrentView} />
       )}
-      {currentView === 'map'           && <MapPage           setCurrentView={setCurrentView} />}
-      {currentView === 'farms'         && <FarmsPage         setCurrentView={setCurrentView} />}
+      {currentView === 'map' && <MapPage setCurrentView={setCurrentView} />}
+      {currentView === 'farms' && <FarmsPage setCurrentView={setCurrentView} />}
       {currentView === 'notifications' && <NotificationsPage setCurrentView={setCurrentView} />}
       {currentView === 'producer-dashboard' && <ProducerDashboard setCurrentView={setCurrentView} />}
-      {currentView === 'buyer-dashboard'    && <BuyerDashboard    setCurrentView={setCurrentView} />}
+      {currentView === 'buyer-dashboard' && <BuyerDashboard setCurrentView={setCurrentView} />}
       <CartSidebar
         isOpen={showCart}
         onClose={() => setShowCart(false)}

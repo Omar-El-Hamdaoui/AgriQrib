@@ -1,28 +1,24 @@
-// components/features/ListingFormModal.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Modal de création d'annonce pour les producteurs
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../auth/supabaseClient';
 import { useAuth } from '../../auth/AuthContext';
 
 const QUALITY_OPTIONS = [
-  { value: 'standard',    label: 'Standard' },
-  { value: 'premium',     label: 'Premium' },
-  { value: 'bio',         label: '🌿 Bio (AB)' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'premium', label: 'Premium' },
+  { value: 'bio', label: '🌿 Bio (AB)' },
   { value: 'bio_premium', label: '🌿 Bio Premium' },
   { value: 'label_rouge', label: '🔴 Label Rouge' },
-  { value: 'aop',         label: 'AOP' },
-  { value: 'igp',         label: 'IGP' },
+  { value: 'aop', label: 'AOP' },
+  { value: 'igp', label: 'IGP' },
 ];
 
 const UNIT_OPTIONS = [
-  { value: 'kg',     label: 'Kilogramme (kg)' },
-  { value: 'piece',  label: 'Pièce' },
-  { value: 'bunch',  label: 'Botte' },
-  { value: 'liter',  label: 'Litre' },
-  { value: 'dozen',  label: 'Douzaine' },
+  { value: 'kg', label: 'Kilogramme (kg)' },
+  { value: 'piece', label: 'Pièce' },
+  { value: 'bunch', label: 'Botte' },
+  { value: 'liter', label: 'Litre' },
+  { value: 'dozen', label: 'Douzaine' },
 ];
 
 const CERT_OPTIONS = ['AB', 'HVE', 'GlobalGAP', 'Demeter', 'Nature & Progrès'];
@@ -32,8 +28,6 @@ const inDays = (n) => {
   const d = new Date(); d.setDate(d.getDate() + n);
   return d.toISOString().split('T')[0];
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
 export function ListingFormModal({ userCoords, onClose, onCreated }) {
   const { user } = useAuth();
 
@@ -51,7 +45,6 @@ export function ListingFormModal({ userCoords, onClose, onCreated }) {
     available_from: today(),
     available_until: inDays(14),
     auction_ends_at: '',
-    // Localisation
     latitude: userCoords?.[0] ?? '',
     longitude: userCoords?.[1] ?? '',
     city: '',
@@ -62,8 +55,6 @@ export function ListingFormModal({ userCoords, onClose, onCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1); // 1 = produit, 2 = prix/dates, 3 = localisation
-
-  // Charger la ferme du producteur
   useEffect(() => {
     supabase
       .from('farms')
@@ -423,8 +414,6 @@ export function ListingFormModal({ userCoords, onClose, onCreated }) {
   );
 }
 
-// ── Composants utilitaires ────────────────────────────────────────────────────
-
 function FormField({ label, hint, children }) {
   return (
     <div>
@@ -458,8 +447,6 @@ export function ModalOverlay({ onClose, children }) {
     </div>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 const inputStyle = {
   width: '100%', padding: '8px 12px', borderRadius: 8,
   border: '1px solid #d1d5db', fontSize: 13, outline: 'none',

@@ -1,7 +1,3 @@
-// components/features/ContactModal.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Modal de coordonnées débloquées après accord entre producteur et collecteur
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../auth/supabaseClient';
@@ -17,7 +13,6 @@ export function ContactModal({ listing, currentUserId, onClose }) {
 
   useEffect(() => {
     const fetchContact = async () => {
-      // 1. Récupérer l'entrée unlocked_contacts
       const { data: unlocked, error: e1 } = await supabase
         .from('unlocked_contacts')
         .select('producer_id, collector_id')
@@ -25,8 +20,6 @@ export function ContactModal({ listing, currentUserId, onClose }) {
         .single();
 
       if (e1 || !unlocked) { setError(true); setLoading(false); return; }
-
-      // 2. Récupérer les deux profils séparément (évite les problèmes d'alias FK)
       const [{ data: prod }, { data: coll }] = await Promise.all([
         supabase.from('users').select('id, first_name, last_name, email, phone').eq('id', unlocked.producer_id).single(),
         supabase.from('users').select('id, first_name, last_name, email, phone').eq('id', unlocked.collector_id).single(),
@@ -40,7 +33,7 @@ export function ContactModal({ listing, currentUserId, onClose }) {
   }, [listing.id]);
 
   const otherParty = isProducer ? collector : producer;
-  const otherRole  = isProducer ? 'Collecteur' : 'Producteur';
+  const otherRole = isProducer ? 'Collecteur' : 'Producteur';
 
   return (
     <ModalOverlay onClose={onClose}>

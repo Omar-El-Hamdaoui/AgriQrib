@@ -1,4 +1,3 @@
-// components/layout/Header.jsx
 import { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { useAuth } from '../../auth/AuthContext';
@@ -8,18 +7,16 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart, un
   const { user, status, logout } = useAuth();
 
   const isAuthenticated = status === 'authenticated';
-  const isProducer      = user?.role === 'producer';
-  const dashboardView   = isProducer ? 'producer-dashboard' : 'buyer-dashboard';
-  const userInitials    = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
-  const isDashboard     = currentView === 'producer-dashboard' || currentView === 'buyer-dashboard';
+  const isProducer = user?.role === 'producer';
+  const dashboardView = isProducer ? 'producer-dashboard' : 'buyer-dashboard';
+  const userInitials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : null;
+  const isDashboard = currentView === 'producer-dashboard' || currentView === 'buyer-dashboard';
 
   const handleLogout = async () => {
     await logout();
     setCurrentView('home');
     setMobileMenuOpen(false);
   };
-
-  // Bouton profil → paramètres du dashboard
   const goToSettings = () => {
     setCurrentView(dashboardView);
     setTimeout(() => {
@@ -29,10 +26,10 @@ export const Header = ({ currentView, setCurrentView, cartCount, setShowCart, un
   };
 
   const navItems = [
-    { id: 'home',    label: 'Accueil',     icon: <Icons.Home /> },
-    { id: 'catalog', label: 'Catalogue',   icon: <Icons.Package /> },
-    { id: 'map',     label: 'Carte',       icon: <Icons.Location /> },
-    { id: 'farms',   label: 'Producteurs', icon: <Icons.User /> },
+    { id: 'home', label: 'Accueil', icon: <Icons.Home /> },
+    { id: 'catalog', label: 'Catalogue', icon: <Icons.Package /> },
+    { id: 'map', label: 'Carte', icon: <Icons.Location /> },
+    { id: 'farms', label: 'Producteurs', icon: <Icons.User /> },
     ...(isAuthenticated
       ? [{ id: dashboardView, label: 'Dashboard', icon: <Icons.BarChart /> }]
       : []),
